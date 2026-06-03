@@ -143,6 +143,7 @@ CREATE TABLE comercial.Concesion (
     fecha_inicio DATE NOT NULL,
     fecha_fin DATE NOT NULL,
     canon_mensual DECIMAL(12,2) NOT NULL,
+    CONSTRAINT CK_Concesion_Fechas CHECK (fecha_fin >= fecha_inicio),
     CONSTRAINT FK_Concesion_Parque FOREIGN KEY (id_parque) REFERENCES parques.Parque(id_parque),
     CONSTRAINT FK_Concesion_Empresa FOREIGN KEY (id_empresa) REFERENCES comercial.Empresa(id_empresa)
 );
