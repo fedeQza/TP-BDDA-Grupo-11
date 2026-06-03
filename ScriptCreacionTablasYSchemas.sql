@@ -193,6 +193,7 @@ CREATE TABLE comercial.ObligacionCanon (
     monto_obligado DECIMAL(12,2) NOT NULL,
     estado VARCHAR(20) NOT NULL,
     fecha_vencimiento DATE NOT NULL,
+    CONSTRAINT CK_ObligacionCanon_Mes CHECK (mes BETWEEN 1 AND 12),
     CONSTRAINT UQ_Concesion_Periodo UNIQUE (id_concesion, anio, mes),
     CONSTRAINT FK_ObligacionCanon_Concesion FOREIGN KEY (id_concesion) REFERENCES comercial.Concesion(id_concesion)
 );
