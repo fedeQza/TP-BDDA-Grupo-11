@@ -47,7 +47,9 @@ CREATE TABLE comercial.Empresa (
     razon_social VARCHAR(150) NOT NULL,
     telefono VARCHAR(30) NULL,
     email VARCHAR(100) NULL,
-    direccion VARCHAR(255) NULL
+    direccion VARCHAR(255) NULL,
+    CONSTRAINT CK_Empresa_CUIT CHECK (cuit NOT LIKE '%[^0-9]%'),
+    CONSTRAINT CK_Empresa_Email CHECK (email IS NULL OR email LIKE '%@%.%')
 );
 
 GO
@@ -70,7 +72,8 @@ CREATE TABLE personal.Guardaparque (
     dni VARCHAR(20) NOT NULL UNIQUE,
     email VARCHAR(100) NULL,
     telefono VARCHAR(50) NULL,
-    activo BIT NOT NULL DEFAULT 1
+    activo BIT NOT NULL DEFAULT 1,
+    CONSTRAINT CK_Guardaparque_Email CHECK (email IS NULL OR email LIKE '%@%.%')
 );
 
 GO
@@ -94,6 +97,7 @@ CREATE TABLE parques.Parque (
     ubicacion VARCHAR(255) NOT NULL,
     superficie DECIMAL(12,2) NOT NULL,
     id_tipo_parque INT NOT NULL,
+    CONSTRAINT CK_Parque_Superficie CHECK (superficie > 0),
     CONSTRAINT FK_Parque_TipoParque FOREIGN KEY (id_tipo_parque) REFERENCES parques.TipoParque(id_tipo_parque)
 );
 
@@ -105,6 +109,8 @@ CREATE TABLE ventas.Ticket (
     fecha_venta DATETIME2 NOT NULL,
     id_forma_pago INT NOT NULL,
     total DECIMAL(12,2) NOT NULL,
+    CONSTRAINT CK_Ticket_Total CHECK (total >= 0),
+    CONSTRAINT CK_Ticket_PuntoVenta CHECK (punto_venta NOT LIKE '%[^0-9]%'),
     CONSTRAINT FK_Ticket_FormaPago FOREIGN KEY (id_forma_pago) REFERENCES ventas.FormaPago(id_forma_pago)
 );
 
@@ -119,6 +125,7 @@ CREATE TABLE personal.HistorialGuardaparque (
     fecha_ingreso DATE NOT NULL,
     fecha_egreso DATE NULL,
     motivo_egreso VARCHAR(255) NULL,
+    CONSTRAINT CK_HistorialGP_Fechas CHECK (fecha_egreso IS NULL OR fecha_egreso >= fecha_ingreso),
     CONSTRAINT FK_HistorialGP_Guardaparque FOREIGN KEY (id_guardaparque) REFERENCES personal.Guardaparque(id_guardaparque),
     CONSTRAINT FK_HistorialGP_Parque FOREIGN KEY (id_parque) REFERENCES parques.Parque(id_parque)
 );
@@ -144,6 +151,7 @@ CREATE TABLE comercial.Concesion (
     fecha_fin DATE NOT NULL,
     canon_mensual DECIMAL(12,2) NOT NULL,
     CONSTRAINT CK_Concesion_Fechas CHECK (fecha_fin >= fecha_inicio),
+    CONSTRAINT CK_Concesion_Canon CHECK (canon_mensual > 0),
     CONSTRAINT FK_Concesion_Parque FOREIGN KEY (id_parque) REFERENCES parques.Parque(id_parque),
     CONSTRAINT FK_Concesion_Empresa FOREIGN KEY (id_empresa) REFERENCES comercial.Empresa(id_empresa)
 );
@@ -157,6 +165,9 @@ CREATE TABLE turismo.AtraccionTour (
     costo DECIMAL(12,2) NOT NULL,
     cupo_maximo INT NOT NULL,
     duracion INT NOT NULL,
+    CONSTRAINT CK_AtraccionTour_Costo CHECK (costo >= 0),
+    CONSTRAINT CK_AtraccionTour_Cupo CHECK (cupo_maximo > 0),
+    CONSTRAINT CK_AtraccionTour_Duracion CHECK (duracion > 0),
     CONSTRAINT FK_AtraccionTour_Parque FOREIGN KEY (id_parque) REFERENCES parques.Parque(id_parque),
     CONSTRAINT FK_AtraccionTour_TipoAtraccion FOREIGN KEY (id_tipo_atraccion) REFERENCES turismo.TipoAtraccion(id_tipo_atraccion)
 );
@@ -168,6 +179,7 @@ CREATE TABLE ventas.HistorialPrecio (
     fecha_desde DATE NOT NULL,
     id_parque INT NOT NULL,
     id_tipo_visitante INT NOT NULL,
+    CONSTRAINT CK_HistorialPrecio_Precio CHECK (precio >= 0),
     CONSTRAINT FK_HistorialPrecio_Parque FOREIGN KEY (id_parque) REFERENCES parques.Parque(id_parque),
     CONSTRAINT FK_HistorialPrecio_TipoVisitante FOREIGN KEY (id_tipo_visitante) REFERENCES ventas.TipoVisitante(id_tipo_visitante)
 );
@@ -194,6 +206,9 @@ CREATE TABLE comercial.ObligacionCanon (
     estado VARCHAR(20) NOT NULL,
     fecha_vencimiento DATE NOT NULL,
     CONSTRAINT CK_ObligacionCanon_Mes CHECK (mes BETWEEN 1 AND 12),
+    CONSTRAINT CK_ObligacionCanon_Anio CHECK (anio BETWEEN 2000 AND 2100),
+    CONSTRAINT CK_ObligacionCanon_Monto CHECK (monto_obligado > 0),
+    CONSTRAINT CK_ObligacionCanon_Estado CHECK (estado IN ('PENDIENTE', 'PAGADO', 'VENCIDO', 'PARCIAL')),
     CONSTRAINT UQ_Concesion_Periodo UNIQUE (id_concesion, anio, mes),
     CONSTRAINT FK_ObligacionCanon_Concesion FOREIGN KEY (id_concesion) REFERENCES comercial.Concesion(id_concesion)
 );
@@ -204,6 +219,7 @@ CREATE TABLE comercial.PagoCanon (
     id_obligacion INT NOT NULL,
     fecha_pago DATE NOT NULL,
     monto_pagado DECIMAL(12,2) NOT NULL,
+    CONSTRAINT CK_PagoCanon_Monto CHECK (monto_pagado > 0),
     CONSTRAINT FK_PagoCanon_ObligacionCanon FOREIGN KEY (id_obligacion) REFERENCES comercial.ObligacionCanon(id_obligacion)
 );
 
@@ -211,14 +227,18 @@ GO
 CREATE TABLE ventas.TicketDetalle (
     id_detalle INT IDENTITY(1,1) PRIMARY KEY,
     id_ticket INT NOT NULL,
-    id_parque INT NOT NULL,                  
-    id_historial_precio INT NULL,            
-    id_tipo_visitante INT NULL,              
+    id_parque INT NOT NULL,
+    id_historial_precio INT NULL,
+    id_tipo_visitante INT NULL,
     id_atraccion_tour INT NULL,
     fecha_acceso DATE NOT NULL,
     cantidad INT NOT NULL,
     precio_unitario DECIMAL(12,2) NOT NULL,
     subtotal DECIMAL(12,2) NOT NULL,
+    CONSTRAINT CK_TicketDetalle_Cantidad CHECK (cantidad > 0),
+    CONSTRAINT CK_TicketDetalle_PrecioUnitario CHECK (precio_unitario >= 0),
+    CONSTRAINT CK_TicketDetalle_Subtotal CHECK (subtotal >= 0),
+    CONSTRAINT CK_TicketDetalle_Item CHECK (id_historial_precio IS NOT NULL OR id_atraccion_tour IS NOT NULL),
     CONSTRAINT FK_TicketDetalle_Ticket FOREIGN KEY (id_ticket) REFERENCES ventas.Ticket(id_ticket),
     CONSTRAINT FK_TicketDetalle_Parque FOREIGN KEY (id_parque) REFERENCES parques.Parque(id_parque),
     CONSTRAINT FK_TicketDetalle_HistorialPrecio FOREIGN KEY (id_historial_precio) REFERENCES ventas.HistorialPrecio(id_historial_precio),
