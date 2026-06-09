@@ -130,6 +130,16 @@ SELECT @id_atraccion_tour = id_atraccion_tour
 FROM turismo.AtraccionTour WHERE nombre = 'Tour Cascada LN-TEST';
 PRINT 'OK — AtraccionTour insertado. ID: ' + CAST(@id_atraccion_tour AS VARCHAR(10));
 
+-- Empresa (necesaria para tests de concesiones)
+EXEC comercial.sp_InsertarEmpresa
+    @p_cuit         = '30712345678',
+    @p_razon_social = 'Concesiones Patagónicas S.A. LN-TEST',
+    @p_telefono     = '0299-555-1234',
+    @p_email        = 'contacto@concpat.lntest',
+    @p_direccion    = 'Av. San Martín 200, Neuquén';
+SELECT @id_empresa = id_empresa FROM comercial.Empresa WHERE cuit = '30712345678';
+PRINT 'OK — Empresa insertada. ID: ' + CAST(@id_empresa AS VARCHAR(10));
+
 PRINT '';
 PRINT '==============================================================';
 PRINT ' SECCIÓN 1 — ventas.sp_RegistrarVenta: CASOS EXITOSOS';
@@ -648,9 +658,368 @@ SELECT CASE WHEN COUNT(*) = 0 THEN 'OK — Sin parques LN-TEST residuales'
             ELSE 'ATENCIÓN — Quedan ' + CAST(COUNT(*) AS VARCHAR) + ' parques' END AS resultado
 FROM parques.Parque WHERE codigo_oficial LIKE 'PN-LN-TEST%';
 
+PRINT '';
+PRINT '==============================================================';
+PRINT ' Testing ventas.sp_RegistrarVenta completado.';
+PRINT '==============================================================';
+
+PRINT '';
+PRINT '==============================================================';
+PRINT ' SECCIÓN 3 — comercial.sp_RegistrarConcesionConObligaciones:';
+PRINT '              CASOS EXITOSOS';
+PRINT '==============================================================';
+
+-- ---------------------------------------------------------------
+PRINT '';
+PRINT '--- TEST LN-21: Concesión 6 meses con día vencimiento default (10) ---';
+-- ---------------------------------------------------------------
+BEGIN TRY
+    EXEC comercial.sp_RegistrarConcesionConObligaciones
+        @p_id_parque       = @id_parque,
+        @p_id_empresa      = @id_empresa,
+        @p_tipo_actividad  = 'Gastronomía LN-TEST',
+        @p_fecha_inicio    = '2026-01-01',
+        @p_fecha_fin       = '2026-06-30',
+        @p_canon_mensual   = 50000.00;
+    PRINT 'OK — Concesión registrada (6 meses, venc. día 10). Debe generar 6 obligaciones.';
+END TRY
+BEGIN CATCH
+    PRINT 'FALLO — ' + ERROR_MESSAGE();
+END CATCH;
+
+-- Evidencia
+SELECT 'Concesión LN-21' AS test, c.id_concesion, c.tipo_actividad, c.fecha_inicio, c.fecha_fin, c.canon_mensual
+FROM comercial.Concesion c
+WHERE c.tipo_actividad = 'Gastronomía LN-TEST';
+
+SELECT 'Obligaciones LN-21' AS test, oc.id_obligacion, oc.mes, oc.anio, oc.monto_obligado, oc.estado, oc.fecha_vencimiento
+FROM comercial.ObligacionCanon oc
+JOIN comercial.Concesion c ON c.id_concesion = oc.id_concesion
+WHERE c.tipo_actividad = 'Gastronomía LN-TEST'
+ORDER BY oc.anio, oc.mes;
+
+-- ---------------------------------------------------------------
+PRINT '';
+PRINT '--- TEST LN-22: Concesión 1 mes (período mínimo) ---';
+-- ---------------------------------------------------------------
+BEGIN TRY
+    EXEC comercial.sp_RegistrarConcesionConObligaciones
+        @p_id_parque       = @id_parque,
+        @p_id_empresa      = @id_empresa,
+        @p_tipo_actividad  = 'Kiosco LN-TEST',
+        @p_fecha_inicio    = '2026-03-01',
+        @p_fecha_fin       = '2026-03-31',
+        @p_canon_mensual   = 20000.00,
+        @p_dia_vencimiento = 15;
+    PRINT 'OK — Concesión registrada (1 mes). Debe generar 1 obligación.';
+END TRY
+BEGIN CATCH
+    PRINT 'FALLO — ' + ERROR_MESSAGE();
+END CATCH;
+
+-- Evidencia
+SELECT 'Obligaciones LN-22' AS test, oc.mes, oc.anio, oc.monto_obligado, oc.fecha_vencimiento
+FROM comercial.ObligacionCanon oc
+JOIN comercial.Concesion c ON c.id_concesion = oc.id_concesion
+WHERE c.tipo_actividad = 'Kiosco LN-TEST';
+
+-- ---------------------------------------------------------------
+PRINT '';
+PRINT '--- TEST LN-23: Concesión 12 meses con día vencimiento personalizado (20) ---';
+-- ---------------------------------------------------------------
+BEGIN TRY
+    EXEC comercial.sp_RegistrarConcesionConObligaciones
+        @p_id_parque       = @id_parque2,
+        @p_id_empresa      = @id_empresa,
+        @p_tipo_actividad  = 'Excursiones acuáticas LN-TEST',
+        @p_fecha_inicio    = '2026-01-01',
+        @p_fecha_fin       = '2026-12-31',
+        @p_canon_mensual   = 75000.00,
+        @p_dia_vencimiento = 20;
+    PRINT 'OK — Concesión registrada (12 meses, venc. día 20). Debe generar 12 obligaciones.';
+END TRY
+BEGIN CATCH
+    PRINT 'FALLO — ' + ERROR_MESSAGE();
+END CATCH;
+
+-- Evidencia: verificar que se generaron 12 obligaciones con vencimiento el día 20
+SELECT 'Cant. Obligaciones LN-23' AS test,
+       COUNT(*) AS total_obligaciones,
+       MIN(fecha_vencimiento) AS primer_vencimiento,
+       MAX(fecha_vencimiento) AS ultimo_vencimiento
+FROM comercial.ObligacionCanon oc
+JOIN comercial.Concesion c ON c.id_concesion = oc.id_concesion
+WHERE c.tipo_actividad = 'Excursiones acuáticas LN-TEST';
+
+-- ---------------------------------------------------------------
+PRINT '';
+PRINT '--- TEST LN-24: Concesión que cruza fin de año (Nov 2025 - Feb 2026) ---';
+-- ---------------------------------------------------------------
+BEGIN TRY
+    EXEC comercial.sp_RegistrarConcesionConObligaciones
+        @p_id_parque       = @id_parque,
+        @p_id_empresa      = @id_empresa,
+        @p_tipo_actividad  = 'Alquiler equipos LN-TEST',
+        @p_fecha_inicio    = '2025-11-01',
+        @p_fecha_fin       = '2026-02-28',
+        @p_canon_mensual   = 30000.00,
+        @p_dia_vencimiento = 5;
+    PRINT 'OK — Concesión registrada (cruza fin de año). Debe generar 4 obligaciones (Nov, Dic, Ene, Feb).';
+END TRY
+BEGIN CATCH
+    PRINT 'FALLO — ' + ERROR_MESSAGE();
+END CATCH;
+
+-- Evidencia: 4 obligaciones cruzando el año
+SELECT 'Obligaciones LN-24' AS test, oc.mes, oc.anio, oc.fecha_vencimiento
+FROM comercial.ObligacionCanon oc
+JOIN comercial.Concesion c ON c.id_concesion = oc.id_concesion
+WHERE c.tipo_actividad = 'Alquiler equipos LN-TEST'
+ORDER BY oc.anio, oc.mes;
+
+PRINT '';
+PRINT '==============================================================';
+PRINT ' SECCIÓN 4 — comercial.sp_RegistrarConcesionConObligaciones:';
+PRINT '              CASOS DE ERROR';
+PRINT '==============================================================';
+PRINT 'Cada test espera recibir un error. Si el bloque CATCH no';
+PRINT 'ejecuta, la validación falla.';
+
+-- ---------------------------------------------------------------
+PRINT '';
+PRINT '--- TEST LN-25: Parque inexistente ---';
+-- ---------------------------------------------------------------
+BEGIN TRY
+    EXEC comercial.sp_RegistrarConcesionConObligaciones
+        @p_id_parque       = 999999,
+        @p_id_empresa      = @id_empresa,
+        @p_tipo_actividad  = 'Actividad error',
+        @p_fecha_inicio    = '2026-01-01',
+        @p_fecha_fin       = '2026-06-30',
+        @p_canon_mensual   = 50000.00;
+    PRINT 'FALLO: debería haber generado error.';
+END TRY
+BEGIN CATCH
+    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+END CATCH;
+
+-- ---------------------------------------------------------------
+PRINT '';
+PRINT '--- TEST LN-26: Empresa inexistente ---';
+-- ---------------------------------------------------------------
+BEGIN TRY
+    EXEC comercial.sp_RegistrarConcesionConObligaciones
+        @p_id_parque       = @id_parque,
+        @p_id_empresa      = 999999,
+        @p_tipo_actividad  = 'Actividad error',
+        @p_fecha_inicio    = '2026-01-01',
+        @p_fecha_fin       = '2026-06-30',
+        @p_canon_mensual   = 50000.00;
+    PRINT 'FALLO: debería haber generado error.';
+END TRY
+BEGIN CATCH
+    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+END CATCH;
+
+-- ---------------------------------------------------------------
+PRINT '';
+PRINT '--- TEST LN-27: Tipo de actividad vacío ---';
+-- ---------------------------------------------------------------
+BEGIN TRY
+    EXEC comercial.sp_RegistrarConcesionConObligaciones
+        @p_id_parque       = @id_parque,
+        @p_id_empresa      = @id_empresa,
+        @p_tipo_actividad  = '',
+        @p_fecha_inicio    = '2026-01-01',
+        @p_fecha_fin       = '2026-06-30',
+        @p_canon_mensual   = 50000.00;
+    PRINT 'FALLO: debería haber generado error.';
+END TRY
+BEGIN CATCH
+    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+END CATCH;
+
+-- ---------------------------------------------------------------
+PRINT '';
+PRINT '--- TEST LN-28: Fechas NULL (inicio y fin) ---';
+-- ---------------------------------------------------------------
+BEGIN TRY
+    EXEC comercial.sp_RegistrarConcesionConObligaciones
+        @p_id_parque       = @id_parque,
+        @p_id_empresa      = @id_empresa,
+        @p_tipo_actividad  = 'Actividad error',
+        @p_fecha_inicio    = NULL,
+        @p_fecha_fin       = NULL,
+        @p_canon_mensual   = 50000.00;
+    PRINT 'FALLO: debería haber generado error.';
+END TRY
+BEGIN CATCH
+    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+END CATCH;
+
+-- ---------------------------------------------------------------
+PRINT '';
+PRINT '--- TEST LN-29: Fecha fin anterior a fecha inicio ---';
+-- ---------------------------------------------------------------
+BEGIN TRY
+    EXEC comercial.sp_RegistrarConcesionConObligaciones
+        @p_id_parque       = @id_parque,
+        @p_id_empresa      = @id_empresa,
+        @p_tipo_actividad  = 'Actividad error',
+        @p_fecha_inicio    = '2026-06-01',
+        @p_fecha_fin       = '2026-01-01',
+        @p_canon_mensual   = 50000.00;
+    PRINT 'FALLO: debería haber generado error.';
+END TRY
+BEGIN CATCH
+    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+END CATCH;
+
+-- ---------------------------------------------------------------
+PRINT '';
+PRINT '--- TEST LN-30: Canon mensual negativo ---';
+-- ---------------------------------------------------------------
+BEGIN TRY
+    EXEC comercial.sp_RegistrarConcesionConObligaciones
+        @p_id_parque       = @id_parque,
+        @p_id_empresa      = @id_empresa,
+        @p_tipo_actividad  = 'Actividad error',
+        @p_fecha_inicio    = '2026-01-01',
+        @p_fecha_fin       = '2026-06-30',
+        @p_canon_mensual   = -5000.00;
+    PRINT 'FALLO: debería haber generado error.';
+END TRY
+BEGIN CATCH
+    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+END CATCH;
+
+-- ---------------------------------------------------------------
+PRINT '';
+PRINT '--- TEST LN-31: Canon mensual igual a cero ---';
+-- ---------------------------------------------------------------
+BEGIN TRY
+    EXEC comercial.sp_RegistrarConcesionConObligaciones
+        @p_id_parque       = @id_parque,
+        @p_id_empresa      = @id_empresa,
+        @p_tipo_actividad  = 'Actividad error',
+        @p_fecha_inicio    = '2026-01-01',
+        @p_fecha_fin       = '2026-06-30',
+        @p_canon_mensual   = 0.00;
+    PRINT 'FALLO: debería haber generado error.';
+END TRY
+BEGIN CATCH
+    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+END CATCH;
+
+-- ---------------------------------------------------------------
+PRINT '';
+PRINT '--- TEST LN-32: Día de vencimiento fuera de rango (0) ---';
+-- ---------------------------------------------------------------
+BEGIN TRY
+    EXEC comercial.sp_RegistrarConcesionConObligaciones
+        @p_id_parque       = @id_parque,
+        @p_id_empresa      = @id_empresa,
+        @p_tipo_actividad  = 'Actividad error',
+        @p_fecha_inicio    = '2026-01-01',
+        @p_fecha_fin       = '2026-06-30',
+        @p_canon_mensual   = 50000.00,
+        @p_dia_vencimiento = 0;
+    PRINT 'FALLO: debería haber generado error.';
+END TRY
+BEGIN CATCH
+    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+END CATCH;
+
+-- ---------------------------------------------------------------
+PRINT '';
+PRINT '--- TEST LN-33: Día de vencimiento fuera de rango (29) ---';
+-- ---------------------------------------------------------------
+BEGIN TRY
+    EXEC comercial.sp_RegistrarConcesionConObligaciones
+        @p_id_parque       = @id_parque,
+        @p_id_empresa      = @id_empresa,
+        @p_tipo_actividad  = 'Actividad error',
+        @p_fecha_inicio    = '2026-01-01',
+        @p_fecha_fin       = '2026-06-30',
+        @p_canon_mensual   = 50000.00,
+        @p_dia_vencimiento = 29;
+    PRINT 'FALLO: debería haber generado error.';
+END TRY
+BEGIN CATCH
+    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+END CATCH;
+
+-- ---------------------------------------------------------------
+PRINT '';
+PRINT '--- TEST LN-34: Múltiples errores simultáneos (acumula mensajes) ---';
+-- ---------------------------------------------------------------
+BEGIN TRY
+    EXEC comercial.sp_RegistrarConcesionConObligaciones
+        @p_id_parque       = 999999,    -- parque inexistente
+        @p_id_empresa      = 999999,    -- empresa inexistente
+        @p_tipo_actividad  = '',        -- vacío
+        @p_fecha_inicio    = '2026-06-01',
+        @p_fecha_fin       = '2026-01-01',  -- fin < inicio
+        @p_canon_mensual   = -100.00,   -- negativo
+        @p_dia_vencimiento = 30;        -- fuera de rango
+    PRINT 'FALLO: debería haber generado error.';
+END TRY
+BEGIN CATCH
+    PRINT 'OK — Errores acumulados esperados:';
+    PRINT ERROR_MESSAGE();
+END CATCH;
+
+PRINT '';
+PRINT '==============================================================';
+PRINT ' SECCIÓN 5 — EVIDENCIA FINAL Y LIMPIEZA';
+PRINT '==============================================================';
+
+-- Resumen de tickets generados exitosamente
+SELECT 'Resumen Tickets Generados' AS seccion,
+       t.id_ticket, t.punto_venta, t.numero, t.total,
+       (SELECT COUNT(*) FROM ventas.TicketDetalle td WHERE td.id_ticket = t.id_ticket) AS cant_detalles
+FROM ventas.Ticket t
+WHERE t.numero LIKE 'LN-%';
+
+-- Resumen de concesiones generadas exitosamente
+SELECT 'Resumen Concesiones Generadas' AS seccion,
+       c.id_concesion, c.tipo_actividad, c.canon_mensual,
+       (SELECT COUNT(*) FROM comercial.ObligacionCanon oc WHERE oc.id_concesion = c.id_concesion) AS cant_obligaciones
+FROM comercial.Concesion c
+WHERE c.tipo_actividad LIKE '%LN-TEST';
+
+-- Limpieza de datos de testing
+DELETE FROM comercial.ObligacionCanon WHERE id_concesion IN (SELECT id_concesion FROM comercial.Concesion WHERE tipo_actividad LIKE '%LN-TEST');
+DELETE FROM comercial.Concesion WHERE tipo_actividad LIKE '%LN-TEST';
+DELETE FROM ventas.TicketDetalle WHERE id_ticket IN (SELECT id_ticket FROM ventas.Ticket WHERE numero LIKE 'LN-%');
+DELETE FROM ventas.Ticket WHERE numero LIKE 'LN-%';
+DELETE FROM turismo.AtraccionTour WHERE nombre = 'Tour Cascada LN-TEST';
+DELETE FROM ventas.HistorialPrecio WHERE id_parque IN (SELECT id_parque FROM parques.Parque WHERE codigo_oficial LIKE 'PN-LN-TEST%');
+DELETE FROM parques.Parque WHERE codigo_oficial LIKE 'PN-LN-TEST%';
+DELETE FROM comercial.Empresa WHERE cuit = '30712345678';
+DELETE FROM parques.TipoParque WHERE descripcion = 'Parque Nacional LN-TEST';
+DELETE FROM ventas.TipoVisitante WHERE descripcion IN ('Adulto LN-TEST', 'Jubilado LN-TEST');
+DELETE FROM ventas.FormaPago WHERE descripcion = 'Efectivo LN-TEST';
+DELETE FROM turismo.TipoAtraccion WHERE descripcion = 'Senderismo LN-TEST';
+
+PRINT 'OK — Datos de testing eliminados.';
+
+-- Verificar limpieza
+SELECT CASE WHEN COUNT(*) = 0 THEN 'OK — Sin tickets LN-TEST residuales'
+            ELSE 'ATENCIÓN — Quedan ' + CAST(COUNT(*) AS VARCHAR) + ' tickets' END AS resultado
+FROM ventas.Ticket WHERE numero LIKE 'LN-%';
+
+SELECT CASE WHEN COUNT(*) = 0 THEN 'OK — Sin concesiones LN-TEST residuales'
+            ELSE 'ATENCIÓN — Quedan ' + CAST(COUNT(*) AS VARCHAR) + ' concesiones' END AS resultado
+FROM comercial.Concesion WHERE tipo_actividad LIKE '%LN-TEST';
+
+SELECT CASE WHEN COUNT(*) = 0 THEN 'OK — Sin parques LN-TEST residuales'
+            ELSE 'ATENCIÓN — Quedan ' + CAST(COUNT(*) AS VARCHAR) + ' parques' END AS resultado
+FROM parques.Parque WHERE codigo_oficial LIKE 'PN-LN-TEST%';
+
 GO
 
 PRINT '';
 PRINT '==============================================================';
-PRINT ' Testing ventas.sp_RegistrarVenta completado.';
+PRINT ' Testing Lógica de Negocio completado.';
 PRINT '==============================================================';
