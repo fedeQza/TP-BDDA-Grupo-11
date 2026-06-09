@@ -1,3 +1,17 @@
+/*
+==============================================================
+Universidad: Universidad Nacional de La Matanza
+Materia:     3641 - Bases de Datos Aplicada
+Grupo:       11
+Integrantes: Federico Augusto Cusa Ortiz, Carla Abril Romero, Lautaro Garat
+Fecha:       09/06/2026
+Descripción: Script de creación de la base de datos, schemas
+             y tablas del sistema de gestión de Parques
+             Nacionales. Incluye restricciones (constraints)
+             y validaciones a nivel de estructura.
+==============================================================
+*/
+
 IF DB_ID('ParquesNacionalesDB') IS NULL
 BEGIN
     CREATE DATABASE ParquesNacionalesDB;

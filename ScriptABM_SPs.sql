@@ -1,9 +1,9 @@
 /*
 ==============================================================
-Universidad: Universidad Tecnológica Nacional (UTN)
+Universidad: Universidad Nacional de La Matanza
 Materia:     3641 - Bases de Datos Aplicada
 Grupo:       11
-Integrantes: [Completar con nombres del grupo]
+Integrantes: Federico Augusto Cusa Ortiz, Carla Abril Romero, Lautaro Garat
 Fecha:       09/06/2026
 Descripción: Stored Procedures para operaciones ABM (Alta,
              Baja, Modificación) de todas las tablas del
