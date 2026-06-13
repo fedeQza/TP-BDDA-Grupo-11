@@ -11,26 +11,26 @@ Descripción: Stored Procedures de lógica de negocio.
              de los datos.
 
              Procedimientos incluidos:
-             1. ventas.sp_RegistrarVenta
+             1. ventas.VentaRegistrar
                 Registra un ticket completo (cabecera + líneas
                 de detalle) en una única transacción atómica.
 
-             2. comercial.sp_RegistrarConcesionConObligaciones
+             2. comercial.ConcesionConObligacionesRegistrar
                 Crea una concesión y genera automáticamente las
                 obligaciones de canon mensuales para todo el
                 período contractual.
 
-             3. comercial.sp_RegistrarPagoCanon
+             3. comercial.PagoCanonRegistrar
                 Registra un pago de canon y actualiza el estado
                 de la obligación (PARCIAL / PAGADO) en la misma
                 transacción.
 
-             4. personal.sp_TransferirGuardaparque
+             4. personal.GuardaparqueTransferir
                 Cierra el período activo de un guardaparque en
                 su parque actual y abre uno nuevo en el parque
                 de destino, de forma atómica.
 
-             5. ventas.sp_ActualizarPrecioEntrada
+             5. ventas.PrecioEntradaActualizar
                 Registra un ajuste de precio de entrada para un
                 parque y tipo de visitante, validando la
                 coherencia temporal con el historial existente.
@@ -63,21 +63,21 @@ ELSE
 GO
 
 -- ==============================================================
--- 1. ventas.sp_RegistrarVenta
+-- 1. ventas.VentaRegistrar
 --    Inserta Ticket + todos sus TicketDetalle en una
 --    transacción. Valida existencia de referencias y que la
 --    suma de subtotales coincida con el total declarado.
 --    Retorna el id del ticket generado.
 -- ==============================================================
 
-IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('ventas.sp_RegistrarVenta') AND type = 'P')
-    PRINT 'Creando Procedure ventas.sp_RegistrarVenta...';
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('ventas.VentaRegistrar') AND type = 'P')
+    PRINT 'Creando Procedure ventas.VentaRegistrar...';
 ELSE
-    PRINT 'OK - Procedure ventas.sp_RegistrarVenta ya existe, se omite creación.';
+    PRINT 'OK - Procedure ventas.VentaRegistrar ya existe, se omite creación.';
 
 GO
 
-CREATE OR ALTER PROCEDURE ventas.sp_RegistrarVenta
+CREATE OR ALTER PROCEDURE ventas.VentaRegistrar
     @p_punto_venta   CHAR(4),
     @p_numero        VARCHAR(50),
     @p_fecha_venta   DATETIME2,
@@ -176,21 +176,21 @@ END
 GO
 
 -- ==============================================================
--- 2. comercial.sp_RegistrarConcesionConObligaciones
+-- 2. comercial.ConcesionConObligacionesRegistrar
 --    Inserta la Concesion y genera una ObligacionCanon por
 --    cada mes del período contractual (vencimiento el día
 --    @p_dia_vencimiento del mes siguiente, estado PENDIENTE).
 --    Retorna el id de la concesión y la cantidad de meses.
 -- ==============================================================
 
-IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('comercial.sp_RegistrarConcesionConObligaciones') AND type = 'P')
-    PRINT 'Creando Procedure comercial.sp_RegistrarConcesionConObligaciones...';
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('comercial.ConcesionConObligacionesRegistrar') AND type = 'P')
+    PRINT 'Creando Procedure comercial.ConcesionConObligacionesRegistrar...';
 ELSE
-    PRINT 'OK - Procedure comercial.sp_RegistrarConcesionConObligaciones ya existe, se omite creación.';
+    PRINT 'OK - Procedure comercial.ConcesionConObligacionesRegistrar ya existe, se omite creación.';
 
 GO
 
-CREATE OR ALTER PROCEDURE comercial.sp_RegistrarConcesionConObligaciones
+CREATE OR ALTER PROCEDURE comercial.ConcesionConObligacionesRegistrar
     @p_id_parque       INT,
     @p_id_empresa      INT,
     @p_tipo_actividad  VARCHAR(100),
@@ -274,7 +274,7 @@ END
 GO
 
 -- ==============================================================
--- 3. comercial.sp_RegistrarPagoCanon
+-- 3. comercial.PagoCanonRegistrar
 --    Inserta PagoCanon y actualiza el estado de la
 --    ObligacionCanon según el total acumulado:
 --      PARCIAL  → pagos parciales (suma < monto_obligado)
@@ -282,14 +282,14 @@ GO
 --    Retorna el estado resultante y el total acumulado.
 -- ==============================================================
 
-IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('comercial.sp_RegistrarPagoCanon') AND type = 'P')
-    PRINT 'Creando Procedure comercial.sp_RegistrarPagoCanon...';
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('comercial.PagoCanonRegistrar') AND type = 'P')
+    PRINT 'Creando Procedure comercial.PagoCanonRegistrar...';
 ELSE
-    PRINT 'OK - Procedure comercial.sp_RegistrarPagoCanon ya existe, se omite creación.';
+    PRINT 'OK - Procedure comercial.PagoCanonRegistrar ya existe, se omite creación.';
 
 GO
 
-CREATE OR ALTER PROCEDURE comercial.sp_RegistrarPagoCanon
+CREATE OR ALTER PROCEDURE comercial.PagoCanonRegistrar
     @p_id_obligacion INT,
     @p_fecha_pago    DATE,
     @p_monto_pagado  DECIMAL(12,2)
@@ -349,21 +349,21 @@ END
 GO
 
 -- ==============================================================
--- 4. personal.sp_TransferirGuardaparque
+-- 4. personal.GuardaparqueTransferir
 --    Cierra el HistorialGuardaparque activo (sin fecha_egreso)
 --    del guardaparque indicado y abre uno nuevo en el parque
 --    de destino. Ambas operaciones se realizan en una única
 --    transacción para garantizar consistencia.
 -- ==============================================================
 
-IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('personal.sp_TransferirGuardaparque') AND type = 'P')
-    PRINT 'Creando Procedure personal.sp_TransferirGuardaparque...';
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('personal.GuardaparqueTransferir') AND type = 'P')
+    PRINT 'Creando Procedure personal.GuardaparqueTransferir...';
 ELSE
-    PRINT 'OK - Procedure personal.sp_TransferirGuardaparque ya existe, se omite creación.';
+    PRINT 'OK - Procedure personal.GuardaparqueTransferir ya existe, se omite creación.';
 
 GO
 
-CREATE OR ALTER PROCEDURE personal.sp_TransferirGuardaparque
+CREATE OR ALTER PROCEDURE personal.GuardaparqueTransferir
     @p_id_guardaparque     INT,
     @p_id_parque_destino   INT,
     @p_fecha_transferencia DATE,
@@ -426,21 +426,21 @@ END
 GO
 
 -- ==============================================================
--- 5. ventas.sp_ActualizarPrecioEntrada
+-- 5. ventas.PrecioEntradaActualizar
 --    Registra un nuevo precio de entrada (HistorialPrecio)
 --    para la combinación parque + tipo de visitante. Valida
 --    que la fecha de vigencia sea posterior al último ajuste
 --    registrado para esa combinación.
 -- ==============================================================
 
-IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('ventas.sp_ActualizarPrecioEntrada') AND type = 'P')
-    PRINT 'Creando Procedure ventas.sp_ActualizarPrecioEntrada...';
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('ventas.PrecioEntradaActualizar') AND type = 'P')
+    PRINT 'Creando Procedure ventas.PrecioEntradaActualizar...';
 ELSE
-    PRINT 'OK - Procedure ventas.sp_ActualizarPrecioEntrada ya existe, se omite creación.';
+    PRINT 'OK - Procedure ventas.PrecioEntradaActualizar ya existe, se omite creación.';
 
 GO
 
-CREATE OR ALTER PROCEDURE ventas.sp_ActualizarPrecioEntrada
+CREATE OR ALTER PROCEDURE ventas.PrecioEntradaActualizar
     @p_id_parque         INT,
     @p_id_tipo_visitante INT,
     @p_nuevo_precio      DECIMAL(12,2),

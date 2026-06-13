@@ -53,31 +53,31 @@ DECLARE
 SET NOCOUNT ON
 
 -- TipoParque
-EXEC parques.sp_InsertarTipoParque @p_descripcion = 'Parque Nacional LN-TEST';
+EXEC parques.TipoParqueInsertar @p_descripcion = 'Parque Nacional LN-TEST';
 SELECT @id_tipo_parque = id_tipo_parque FROM parques.TipoParque WHERE descripcion = 'Parque Nacional LN-TEST';
 PRINT 'OK � TipoParque insertado. ID: ' + CAST(@id_tipo_parque AS VARCHAR(10));
 
 -- TipoVisitante
-EXEC ventas.sp_InsertarTipoVisitante @p_descripcion = 'Adulto LN-TEST';
+EXEC ventas.TipoVisitanteInsertar @p_descripcion = 'Adulto LN-TEST';
 SELECT @id_tipo_visitante = id_tipo_visitante FROM ventas.TipoVisitante WHERE descripcion = 'Adulto LN-TEST';
 PRINT 'OK � TipoVisitante insertado. ID: ' + CAST(@id_tipo_visitante AS VARCHAR(10));
 
-EXEC ventas.sp_InsertarTipoVisitante @p_descripcion = 'Jubilado LN-TEST';
+EXEC ventas.TipoVisitanteInsertar @p_descripcion = 'Jubilado LN-TEST';
 SELECT @id_tipo_visitante2 = id_tipo_visitante FROM ventas.TipoVisitante WHERE descripcion = 'Jubilado LN-TEST';
 PRINT 'OK � TipoVisitante 2 insertado. ID: ' + CAST(@id_tipo_visitante2 AS VARCHAR(10));
 
 -- FormaPago
-EXEC ventas.sp_InsertarFormaPago @p_descripcion = 'Efectivo LN-TEST';
+EXEC ventas.FormaPagoInsertar @p_descripcion = 'Efectivo LN-TEST';
 SELECT @id_forma_pago = id_forma_pago FROM ventas.FormaPago WHERE descripcion = 'Efectivo LN-TEST';
 PRINT 'OK � FormaPago insertado. ID: ' + CAST(@id_forma_pago AS VARCHAR(10));
 
 -- TipoAtraccion
-EXEC turismo.sp_InsertarTipoAtraccion @p_descripcion = 'Senderismo LN-TEST';
+EXEC turismo.TipoAtraccionInsertar @p_descripcion = 'Senderismo LN-TEST';
 SELECT @id_tipo_atraccion = id_tipo_atraccion FROM turismo.TipoAtraccion WHERE descripcion = 'Senderismo LN-TEST';
 PRINT 'OK � TipoAtraccion insertado. ID: ' + CAST(@id_tipo_atraccion AS VARCHAR(10));
 
 -- Parque
-EXEC parques.sp_InsertarParque
+EXEC parques.ParqueInsertar
     @p_codigo_oficial = 'PN-LN-TEST-01',
     @p_nombre         = 'Parque L�gica Negocio TEST',
     @p_ubicacion      = 'Provincia de Testing, Argentina',
@@ -87,7 +87,7 @@ SELECT @id_parque = id_parque FROM parques.Parque WHERE codigo_oficial = 'PN-LN-
 PRINT 'OK � Parque insertado. ID: ' + CAST(@id_parque AS VARCHAR(10));
 
 -- Parque 2 (para tests con m�ltiples parques)
-EXEC parques.sp_InsertarParque
+EXEC parques.ParqueInsertar
     @p_codigo_oficial = 'PN-LN-TEST-02',
     @p_nombre         = 'Parque L�gica Negocio 2 TEST',
     @p_ubicacion      = 'Buenos Aires, Argentina',
@@ -97,7 +97,7 @@ SELECT @id_parque2 = id_parque FROM parques.Parque WHERE codigo_oficial = 'PN-LN
 PRINT 'OK � Parque 2 insertado. ID: ' + CAST(@id_parque2 AS VARCHAR(10));
 
 -- HistorialPrecio (entrada para Adulto en Parque 1)
-EXEC ventas.sp_InsertarHistorialPrecio
+EXEC ventas.HistorialPrecioInsertar
     @p_precio            = 3500.00,
     @p_fecha_desde       = '2025-01-01',
     @p_id_parque         = @id_parque,
@@ -108,7 +108,7 @@ WHERE id_parque = @id_parque AND id_tipo_visitante = @id_tipo_visitante;
 PRINT 'OK � HistorialPrecio insertado. ID: ' + CAST(@id_historial_precio AS VARCHAR(10));
 
 -- HistorialPrecio (entrada para Jubilado en Parque 1)
-EXEC ventas.sp_InsertarHistorialPrecio
+EXEC ventas.HistorialPrecioInsertar
     @p_precio            = 1750.00,
     @p_fecha_desde       = '2025-01-01',
     @p_id_parque         = @id_parque,
@@ -119,7 +119,7 @@ WHERE id_parque = @id_parque AND id_tipo_visitante = @id_tipo_visitante2;
 PRINT 'OK � HistorialPrecio 2 insertado. ID: ' + CAST(@id_historial_precio2 AS VARCHAR(10));
 
 -- AtraccionTour
-EXEC turismo.sp_InsertarAtraccionTour
+EXEC turismo.AtraccionTourInsertar
     @p_id_parque         = @id_parque,
     @p_id_tipo_atraccion = @id_tipo_atraccion,
     @p_nombre            = 'Tour Cascada LN-TEST',
@@ -131,7 +131,7 @@ FROM turismo.AtraccionTour WHERE nombre = 'Tour Cascada LN-TEST';
 PRINT 'OK � AtraccionTour insertado. ID: ' + CAST(@id_atraccion_tour AS VARCHAR(10));
 
 -- Empresa (necesaria para tests de concesiones)
-EXEC comercial.sp_InsertarEmpresa
+EXEC comercial.EmpresaInsertar
     @p_cuit         = '30712345678',
     @p_razon_social = 'Concesiones Patag�nicas S.A. LN-TEST',
     @p_telefono     = '0299-555-1234',
@@ -142,7 +142,7 @@ PRINT 'OK � Empresa insertada. ID: ' + CAST(@id_empresa AS VARCHAR(10));
 
 PRINT '';
 PRINT '==============================================================';
-PRINT ' SECCI�N 1 � ventas.sp_RegistrarVenta: CASOS EXITOSOS';
+PRINT ' SECCI�N 1 � ventas.VentaRegistrar: CASOS EXITOSOS';
 PRINT '==============================================================';
 
 -- ---------------------------------------------------------------
@@ -154,7 +154,7 @@ INSERT INTO @detalles01 (id_parque, id_historial_precio, id_tipo_visitante, id_a
 VALUES (@id_parque, @id_historial_precio, @id_tipo_visitante, NULL, '2026-06-15', 2, 3500.00, 7000.00);
 
 BEGIN TRY
-    EXEC ventas.sp_RegistrarVenta
+    EXEC ventas.VentaRegistrar
         @p_punto_venta   = '0001',
         @p_numero        = 'LN-00000001',
         @p_fecha_venta   = '2026-06-09 10:00:00',
@@ -184,7 +184,7 @@ INSERT INTO @detalles02 (id_parque, id_historial_precio, id_tipo_visitante, id_a
 VALUES (@id_parque, NULL, NULL, @id_atraccion_tour, '2026-06-16', 3, 2000.00, 6000.00);
 
 BEGIN TRY
-    EXEC ventas.sp_RegistrarVenta
+    EXEC ventas.VentaRegistrar
         @p_punto_venta   = '0001',
         @p_numero        = 'LN-00000002',
         @p_fecha_venta   = '2026-06-09 11:00:00',
@@ -221,7 +221,7 @@ INSERT INTO @detalles03 (id_parque, id_historial_precio, id_tipo_visitante, id_a
 VALUES (@id_parque, NULL, NULL, @id_atraccion_tour, '2026-06-20', 3, 2000.00, 6000.00);
 
 BEGIN TRY
-    EXEC ventas.sp_RegistrarVenta
+    EXEC ventas.VentaRegistrar
         @p_punto_venta   = '0002',
         @p_numero        = 'LN-00000003',
         @p_fecha_venta   = '2026-06-09 12:30:00',
@@ -251,7 +251,7 @@ INSERT INTO @detalles04 (id_parque, id_historial_precio, id_tipo_visitante, id_a
 VALUES (@id_parque, @id_historial_precio, @id_tipo_visitante, NULL, '2026-06-21', 1, 0.00, 0.00);
 
 BEGIN TRY
-    EXEC ventas.sp_RegistrarVenta
+    EXEC ventas.VentaRegistrar
         @p_punto_venta   = '0001',
         @p_numero        = 'LN-00000004',
         @p_fecha_venta   = '2026-06-09 09:00:00',
@@ -266,7 +266,7 @@ END CATCH;
 
 PRINT '';
 PRINT '==============================================================';
-PRINT ' SECCI�N 2 � ventas.sp_RegistrarVenta: CASOS DE ERROR';
+PRINT ' SECCI�N 2 � ventas.VentaRegistrar: CASOS DE ERROR';
 PRINT '==============================================================';
 PRINT 'Cada test espera recibir un error. Si el bloque CATCH no';
 PRINT 'ejecuta, la validaci�n falla.';
@@ -280,7 +280,7 @@ INSERT INTO @detalles05 (id_parque, id_historial_precio, id_tipo_visitante, id_a
 VALUES (@id_parque, @id_historial_precio, @id_tipo_visitante, NULL, '2026-06-15', 1, 3500.00, 3500.00);
 
 BEGIN TRY
-    EXEC ventas.sp_RegistrarVenta
+    EXEC ventas.VentaRegistrar
         @p_punto_venta   = 'AB01',
         @p_numero        = 'LN-ERR-001',
         @p_fecha_venta   = '2026-06-09 10:00:00',
@@ -302,7 +302,7 @@ INSERT INTO @detalles06 (id_parque, id_historial_precio, id_tipo_visitante, id_a
 VALUES (@id_parque, @id_historial_precio, @id_tipo_visitante, NULL, '2026-06-15', 1, 3500.00, 3500.00);
 
 BEGIN TRY
-    EXEC ventas.sp_RegistrarVenta
+    EXEC ventas.VentaRegistrar
         @p_punto_venta   = '0001',
         @p_numero        = '',
         @p_fecha_venta   = '2026-06-09 10:00:00',
@@ -324,7 +324,7 @@ INSERT INTO @detalles07 (id_parque, id_historial_precio, id_tipo_visitante, id_a
 VALUES (@id_parque, @id_historial_precio, @id_tipo_visitante, NULL, '2026-06-15', 1, 3500.00, 3500.00);
 
 BEGIN TRY
-    EXEC ventas.sp_RegistrarVenta
+    EXEC ventas.VentaRegistrar
         @p_punto_venta   = '0001',
         @p_numero        = 'LN-ERR-003',
         @p_fecha_venta   = NULL,
@@ -346,7 +346,7 @@ INSERT INTO @detalles08 (id_parque, id_historial_precio, id_tipo_visitante, id_a
 VALUES (@id_parque, @id_historial_precio, @id_tipo_visitante, NULL, '2026-06-15', 1, 3500.00, 3500.00);
 
 BEGIN TRY
-    EXEC ventas.sp_RegistrarVenta
+    EXEC ventas.VentaRegistrar
         @p_punto_venta   = '0001',
         @p_numero        = 'LN-ERR-004',
         @p_fecha_venta   = '2026-06-09 10:00:00',
@@ -368,7 +368,7 @@ INSERT INTO @detalles09 (id_parque, id_historial_precio, id_tipo_visitante, id_a
 VALUES (@id_parque, @id_historial_precio, @id_tipo_visitante, NULL, '2026-06-15', 1, 3500.00, 3500.00);
 
 BEGIN TRY
-    EXEC ventas.sp_RegistrarVenta
+    EXEC ventas.VentaRegistrar
         @p_punto_venta   = '0001',
         @p_numero        = 'LN-ERR-005',
         @p_fecha_venta   = '2026-06-09 10:00:00',
@@ -389,7 +389,7 @@ DECLARE @detalles10 ventas.tt_DetalleVenta;
 -- No insertamos nada en @detalles10
 
 BEGIN TRY
-    EXEC ventas.sp_RegistrarVenta
+    EXEC ventas.VentaRegistrar
         @p_punto_venta   = '0001',
         @p_numero        = 'LN-ERR-006',
         @p_fecha_venta   = '2026-06-09 10:00:00',
@@ -411,7 +411,7 @@ INSERT INTO @detalles11 (id_parque, id_historial_precio, id_tipo_visitante, id_a
 VALUES (@id_parque, NULL, @id_tipo_visitante, NULL, '2026-06-15', 1, 3500.00, 3500.00);
 
 BEGIN TRY
-    EXEC ventas.sp_RegistrarVenta
+    EXEC ventas.VentaRegistrar
         @p_punto_venta   = '0001',
         @p_numero        = 'LN-ERR-007',
         @p_fecha_venta   = '2026-06-09 10:00:00',
@@ -433,7 +433,7 @@ INSERT INTO @detalles12 (id_parque, id_historial_precio, id_tipo_visitante, id_a
 VALUES (@id_parque, @id_historial_precio, @id_tipo_visitante, NULL, '2026-06-15', 0, 3500.00, 0.00);
 
 BEGIN TRY
-    EXEC ventas.sp_RegistrarVenta
+    EXEC ventas.VentaRegistrar
         @p_punto_venta   = '0001',
         @p_numero        = 'LN-ERR-008',
         @p_fecha_venta   = '2026-06-09 10:00:00',
@@ -455,7 +455,7 @@ INSERT INTO @detalles13 (id_parque, id_historial_precio, id_tipo_visitante, id_a
 VALUES (@id_parque, @id_historial_precio, @id_tipo_visitante, NULL, '2026-06-15', 1, -500.00, -500.00);
 
 BEGIN TRY
-    EXEC ventas.sp_RegistrarVenta
+    EXEC ventas.VentaRegistrar
         @p_punto_venta   = '0001',
         @p_numero        = 'LN-ERR-009',
         @p_fecha_venta   = '2026-06-09 10:00:00',
@@ -477,7 +477,7 @@ INSERT INTO @detalles14 (id_parque, id_historial_precio, id_tipo_visitante, id_a
 VALUES (@id_parque, @id_historial_precio, @id_tipo_visitante, NULL, '2026-06-15', 1, 3500.00, -3500.00);
 
 BEGIN TRY
-    EXEC ventas.sp_RegistrarVenta
+    EXEC ventas.VentaRegistrar
         @p_punto_venta   = '0001',
         @p_numero        = 'LN-ERR-010',
         @p_fecha_venta   = '2026-06-09 10:00:00',
@@ -499,7 +499,7 @@ INSERT INTO @detalles15 (id_parque, id_historial_precio, id_tipo_visitante, id_a
 VALUES (999999, @id_historial_precio, @id_tipo_visitante, NULL, '2026-06-15', 1, 3500.00, 3500.00);
 
 BEGIN TRY
-    EXEC ventas.sp_RegistrarVenta
+    EXEC ventas.VentaRegistrar
         @p_punto_venta   = '0001',
         @p_numero        = 'LN-ERR-011',
         @p_fecha_venta   = '2026-06-09 10:00:00',
@@ -521,7 +521,7 @@ INSERT INTO @detalles16 (id_parque, id_historial_precio, id_tipo_visitante, id_a
 VALUES (@id_parque, 999999, @id_tipo_visitante, NULL, '2026-06-15', 1, 3500.00, 3500.00);
 
 BEGIN TRY
-    EXEC ventas.sp_RegistrarVenta
+    EXEC ventas.VentaRegistrar
         @p_punto_venta   = '0001',
         @p_numero        = 'LN-ERR-012',
         @p_fecha_venta   = '2026-06-09 10:00:00',
@@ -543,7 +543,7 @@ INSERT INTO @detalles17 (id_parque, id_historial_precio, id_tipo_visitante, id_a
 VALUES (@id_parque, @id_historial_precio, 999999, NULL, '2026-06-15', 1, 3500.00, 3500.00);
 
 BEGIN TRY
-    EXEC ventas.sp_RegistrarVenta
+    EXEC ventas.VentaRegistrar
         @p_punto_venta   = '0001',
         @p_numero        = 'LN-ERR-013',
         @p_fecha_venta   = '2026-06-09 10:00:00',
@@ -565,7 +565,7 @@ INSERT INTO @detalles18 (id_parque, id_historial_precio, id_tipo_visitante, id_a
 VALUES (@id_parque, NULL, NULL, 999999, '2026-06-15', 1, 2000.00, 2000.00);
 
 BEGIN TRY
-    EXEC ventas.sp_RegistrarVenta
+    EXEC ventas.VentaRegistrar
         @p_punto_venta   = '0001',
         @p_numero        = 'LN-ERR-014',
         @p_fecha_venta   = '2026-06-09 10:00:00',
@@ -587,7 +587,7 @@ INSERT INTO @detalles19 (id_parque, id_historial_precio, id_tipo_visitante, id_a
 VALUES (@id_parque, @id_historial_precio, @id_tipo_visitante, NULL, '2026-06-15', 2, 3500.00, 7000.00);
 
 BEGIN TRY
-    EXEC ventas.sp_RegistrarVenta
+    EXEC ventas.VentaRegistrar
         @p_punto_venta   = '0001',
         @p_numero        = 'LN-ERR-015',
         @p_fecha_venta   = '2026-06-09 10:00:00',
@@ -610,7 +610,7 @@ INSERT INTO @detalles20 (id_parque, id_historial_precio, id_tipo_visitante, id_a
 VALUES (999999, NULL, NULL, NULL, '2026-06-15', 0, -10.00, -10.00);
 
 BEGIN TRY
-    EXEC ventas.sp_RegistrarVenta
+    EXEC ventas.VentaRegistrar
         @p_punto_venta   = 'XXXX',   -- punto de venta inv�lido
         @p_numero        = '',        -- n�mero vac�o
         @p_fecha_venta   = NULL,      -- fecha NULL
@@ -660,12 +660,12 @@ FROM parques.Parque WHERE codigo_oficial LIKE 'PN-LN-TEST%';
 
 PRINT '';
 PRINT '==============================================================';
-PRINT ' Testing ventas.sp_RegistrarVenta completado.';
+PRINT ' Testing ventas.VentaRegistrar completado.';
 PRINT '==============================================================';
 
 PRINT '';
 PRINT '==============================================================';
-PRINT ' SECCI�N 3 � comercial.sp_RegistrarConcesionConObligaciones:';
+PRINT ' SECCI�N 3 � comercial.ConcesionConObligacionesRegistrar:';
 PRINT '              CASOS EXITOSOS';
 PRINT '==============================================================';
 
@@ -674,7 +674,7 @@ PRINT '';
 PRINT '--- TEST LN-21: Concesi�n 6 meses con d�a vencimiento default (10) ---';
 -- ---------------------------------------------------------------
 BEGIN TRY
-    EXEC comercial.sp_RegistrarConcesionConObligaciones
+    EXEC comercial.ConcesionConObligacionesRegistrar
         @p_id_parque       = @id_parque,
         @p_id_empresa      = @id_empresa,
         @p_tipo_actividad  = 'Gastronom�a LN-TEST',
@@ -703,7 +703,7 @@ PRINT '';
 PRINT '--- TEST LN-22: Concesi�n 1 mes (per�odo m�nimo) ---';
 -- ---------------------------------------------------------------
 BEGIN TRY
-    EXEC comercial.sp_RegistrarConcesionConObligaciones
+    EXEC comercial.ConcesionConObligacionesRegistrar
         @p_id_parque       = @id_parque,
         @p_id_empresa      = @id_empresa,
         @p_tipo_actividad  = 'Kiosco LN-TEST',
@@ -728,7 +728,7 @@ PRINT '';
 PRINT '--- TEST LN-23: Concesi�n 12 meses con d�a vencimiento personalizado (20) ---';
 -- ---------------------------------------------------------------
 BEGIN TRY
-    EXEC comercial.sp_RegistrarConcesionConObligaciones
+    EXEC comercial.ConcesionConObligacionesRegistrar
         @p_id_parque       = @id_parque2,
         @p_id_empresa      = @id_empresa,
         @p_tipo_actividad  = 'Excursiones acu�ticas LN-TEST',
@@ -756,7 +756,7 @@ PRINT '';
 PRINT '--- TEST LN-24: Concesi�n que cruza fin de a�o (Nov 2025 - Feb 2026) ---';
 -- ---------------------------------------------------------------
 BEGIN TRY
-    EXEC comercial.sp_RegistrarConcesionConObligaciones
+    EXEC comercial.ConcesionConObligacionesRegistrar
         @p_id_parque       = @id_parque,
         @p_id_empresa      = @id_empresa,
         @p_tipo_actividad  = 'Alquiler equipos LN-TEST',
@@ -779,7 +779,7 @@ ORDER BY oc.anio, oc.mes;
 
 PRINT '';
 PRINT '==============================================================';
-PRINT ' SECCI�N 4 � comercial.sp_RegistrarConcesionConObligaciones:';
+PRINT ' SECCI�N 4 � comercial.ConcesionConObligacionesRegistrar:';
 PRINT '              CASOS DE ERROR';
 PRINT '==============================================================';
 PRINT 'Cada test espera recibir un error. Si el bloque CATCH no';
@@ -790,7 +790,7 @@ PRINT '';
 PRINT '--- TEST LN-25: Parque inexistente ---';
 -- ---------------------------------------------------------------
 BEGIN TRY
-    EXEC comercial.sp_RegistrarConcesionConObligaciones
+    EXEC comercial.ConcesionConObligacionesRegistrar
         @p_id_parque       = 999999,
         @p_id_empresa      = @id_empresa,
         @p_tipo_actividad  = 'Actividad error',
@@ -808,7 +808,7 @@ PRINT '';
 PRINT '--- TEST LN-26: Empresa inexistente ---';
 -- ---------------------------------------------------------------
 BEGIN TRY
-    EXEC comercial.sp_RegistrarConcesionConObligaciones
+    EXEC comercial.ConcesionConObligacionesRegistrar
         @p_id_parque       = @id_parque,
         @p_id_empresa      = 999999,
         @p_tipo_actividad  = 'Actividad error',
@@ -826,7 +826,7 @@ PRINT '';
 PRINT '--- TEST LN-27: Tipo de actividad vac�o ---';
 -- ---------------------------------------------------------------
 BEGIN TRY
-    EXEC comercial.sp_RegistrarConcesionConObligaciones
+    EXEC comercial.ConcesionConObligacionesRegistrar
         @p_id_parque       = @id_parque,
         @p_id_empresa      = @id_empresa,
         @p_tipo_actividad  = '',
@@ -844,7 +844,7 @@ PRINT '';
 PRINT '--- TEST LN-28: Fechas NULL (inicio y fin) ---';
 -- ---------------------------------------------------------------
 BEGIN TRY
-    EXEC comercial.sp_RegistrarConcesionConObligaciones
+    EXEC comercial.ConcesionConObligacionesRegistrar
         @p_id_parque       = @id_parque,
         @p_id_empresa      = @id_empresa,
         @p_tipo_actividad  = 'Actividad error',
@@ -862,7 +862,7 @@ PRINT '';
 PRINT '--- TEST LN-29: Fecha fin anterior a fecha inicio ---';
 -- ---------------------------------------------------------------
 BEGIN TRY
-    EXEC comercial.sp_RegistrarConcesionConObligaciones
+    EXEC comercial.ConcesionConObligacionesRegistrar
         @p_id_parque       = @id_parque,
         @p_id_empresa      = @id_empresa,
         @p_tipo_actividad  = 'Actividad error',
@@ -880,7 +880,7 @@ PRINT '';
 PRINT '--- TEST LN-30: Canon mensual negativo ---';
 -- ---------------------------------------------------------------
 BEGIN TRY
-    EXEC comercial.sp_RegistrarConcesionConObligaciones
+    EXEC comercial.ConcesionConObligacionesRegistrar
         @p_id_parque       = @id_parque,
         @p_id_empresa      = @id_empresa,
         @p_tipo_actividad  = 'Actividad error',
@@ -898,7 +898,7 @@ PRINT '';
 PRINT '--- TEST LN-31: Canon mensual igual a cero ---';
 -- ---------------------------------------------------------------
 BEGIN TRY
-    EXEC comercial.sp_RegistrarConcesionConObligaciones
+    EXEC comercial.ConcesionConObligacionesRegistrar
         @p_id_parque       = @id_parque,
         @p_id_empresa      = @id_empresa,
         @p_tipo_actividad  = 'Actividad error',
@@ -916,7 +916,7 @@ PRINT '';
 PRINT '--- TEST LN-32: D�a de vencimiento fuera de rango (0) ---';
 -- ---------------------------------------------------------------
 BEGIN TRY
-    EXEC comercial.sp_RegistrarConcesionConObligaciones
+    EXEC comercial.ConcesionConObligacionesRegistrar
         @p_id_parque       = @id_parque,
         @p_id_empresa      = @id_empresa,
         @p_tipo_actividad  = 'Actividad error',
@@ -935,7 +935,7 @@ PRINT '';
 PRINT '--- TEST LN-33: D�a de vencimiento fuera de rango (29) ---';
 -- ---------------------------------------------------------------
 BEGIN TRY
-    EXEC comercial.sp_RegistrarConcesionConObligaciones
+    EXEC comercial.ConcesionConObligacionesRegistrar
         @p_id_parque       = @id_parque,
         @p_id_empresa      = @id_empresa,
         @p_tipo_actividad  = 'Actividad error',
@@ -954,7 +954,7 @@ PRINT '';
 PRINT '--- TEST LN-34: M�ltiples errores simult�neos (acumula mensajes) ---';
 -- ---------------------------------------------------------------
 BEGIN TRY
-    EXEC comercial.sp_RegistrarConcesionConObligaciones
+    EXEC comercial.ConcesionConObligacionesRegistrar
         @p_id_parque       = 999999,    -- parque inexistente
         @p_id_empresa      = 999999,    -- empresa inexistente
         @p_tipo_actividad  = '',        -- vac�o

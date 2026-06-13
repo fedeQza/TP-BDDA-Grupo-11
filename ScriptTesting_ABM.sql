@@ -48,7 +48,7 @@ PRINT '==============================================================';
 -- ---------------------------------------------------------------
 PRINT '--- TEST A-01: Insertar TipoParque ---';
 -- ---------------------------------------------------------------
-EXEC parques.sp_InsertarTipoParque @p_descripcion = 'Parque Nacional TEST';
+EXEC parques.TipoParqueInsertar @p_descripcion = 'Parque Nacional TEST';
 SELECT @id_tipo_parque = id_tipo_parque
 FROM parques.TipoParque WHERE descripcion = 'Parque Nacional TEST';
 PRINT 'OK — TipoParque insertado. ID: ' + CAST(@id_tipo_parque AS VARCHAR(10));
@@ -56,7 +56,7 @@ PRINT 'OK — TipoParque insertado. ID: ' + CAST(@id_tipo_parque AS VARCHAR(10))
 -- ---------------------------------------------------------------
 PRINT '--- TEST A-02: Insertar TipoVisitante ---';
 -- ---------------------------------------------------------------
-EXEC ventas.sp_InsertarTipoVisitante @p_descripcion = 'Adulto TEST';
+EXEC ventas.TipoVisitanteInsertar @p_descripcion = 'Adulto TEST';
 SELECT @id_tipo_visitante = id_tipo_visitante
 FROM ventas.TipoVisitante WHERE descripcion = 'Adulto TEST';
 PRINT 'OK — TipoVisitante insertado. ID: ' + CAST(@id_tipo_visitante AS VARCHAR(10));
@@ -64,7 +64,7 @@ PRINT 'OK — TipoVisitante insertado. ID: ' + CAST(@id_tipo_visitante AS VARCHA
 -- ---------------------------------------------------------------
 PRINT '--- TEST A-03: Insertar FormaPago ---';
 -- ---------------------------------------------------------------
-EXEC ventas.sp_InsertarFormaPago @p_descripcion = 'Efectivo TEST';
+EXEC ventas.FormaPagoInsertar @p_descripcion = 'Efectivo TEST';
 SELECT @id_forma_pago = id_forma_pago
 FROM ventas.FormaPago WHERE descripcion = 'Efectivo TEST';
 PRINT 'OK — FormaPago insertado. ID: ' + CAST(@id_forma_pago AS VARCHAR(10));
@@ -72,7 +72,7 @@ PRINT 'OK — FormaPago insertado. ID: ' + CAST(@id_forma_pago AS VARCHAR(10));
 -- ---------------------------------------------------------------
 PRINT '--- TEST A-04: Insertar TipoAtraccion ---';
 -- ---------------------------------------------------------------
-EXEC turismo.sp_InsertarTipoAtraccion @p_descripcion = 'Senderismo TEST';
+EXEC turismo.TipoAtraccionInsertar @p_descripcion = 'Senderismo TEST';
 SELECT @id_tipo_atraccion = id_tipo_atraccion
 FROM turismo.TipoAtraccion WHERE descripcion = 'Senderismo TEST';
 PRINT 'OK — TipoAtraccion insertado. ID: ' + CAST(@id_tipo_atraccion AS VARCHAR(10));
@@ -80,7 +80,7 @@ PRINT 'OK — TipoAtraccion insertado. ID: ' + CAST(@id_tipo_atraccion AS VARCHA
 -- ---------------------------------------------------------------
 PRINT '--- TEST A-05: Insertar Guardaparque ---';
 -- ---------------------------------------------------------------
-EXEC personal.sp_InsertarGuardaparque
+EXEC personal.GuardaparqueInsertar
     @p_nombre   = 'Laura',
     @p_apellido = 'Ríos',
     @p_dni      = '30111222',
@@ -93,7 +93,7 @@ PRINT 'OK — Guardaparque insertado. ID: ' + CAST(@id_guardaparque AS VARCHAR(1
 -- ---------------------------------------------------------------
 PRINT '--- TEST A-06: Insertar Guia ---';
 -- ---------------------------------------------------------------
-EXEC turismo.sp_InsertarGuia
+EXEC turismo.GuiaInsertar
     @p_nombre                = 'Carlos',
     @p_apellido              = 'Vera',
     @p_dni                   = '28999888',
@@ -105,7 +105,7 @@ PRINT 'OK — Guia insertado. ID: ' + CAST(@id_guia AS VARCHAR(10));
 -- ---------------------------------------------------------------
 PRINT '--- TEST A-07: Insertar Parque ---';
 -- ---------------------------------------------------------------
-EXEC parques.sp_InsertarParque
+EXEC parques.ParqueInsertar
     @p_codigo_oficial = 'PN-TEST-01',
     @p_nombre         = 'Parque Las Pruebas',
     @p_ubicacion      = 'Provincia de Testing, Argentina',
@@ -117,7 +117,7 @@ PRINT 'OK — Parque insertado. ID: ' + CAST(@id_parque AS VARCHAR(10));
 -- ---------------------------------------------------------------
 PRINT '--- TEST A-08: Insertar Empresa ---';
 -- ---------------------------------------------------------------
-EXEC comercial.sp_InsertarEmpresa
+EXEC comercial.EmpresaInsertar
     @p_cuit         = '30123456789',
     @p_razon_social = 'Servicios Patagónicos S.A. TEST',
     @p_telefono     = '0299-555-0000',
@@ -129,7 +129,7 @@ PRINT 'OK — Empresa insertada. ID: ' + CAST(@id_empresa AS VARCHAR(10));
 -- ---------------------------------------------------------------
 PRINT '--- TEST A-09: Insertar HistorialGuardaparque ---';
 -- ---------------------------------------------------------------
-EXEC personal.sp_InsertarHistorialGuardaparque
+EXEC personal.HistorialGuardaparqueInsertar
     @p_id_guardaparque = @id_guardaparque,
     @p_id_parque       = @id_parque,
     @p_fecha_ingreso   = '2025-01-01';
@@ -141,7 +141,7 @@ PRINT 'OK — HistorialGuardaparque insertado. ID: ' + CAST(@id_historial_gp AS 
 -- ---------------------------------------------------------------
 PRINT '--- TEST A-10: Insertar GuiaParque ---';
 -- ---------------------------------------------------------------
-EXEC turismo.sp_InsertarGuiaParque
+EXEC turismo.GuiaParqueInsertar
     @p_id_guia            = @id_guia,
     @p_id_parque          = @id_parque,
     @p_fecha_autorizacion = '2025-03-01',
@@ -151,7 +151,7 @@ PRINT 'OK — GuiaParque insertado (guía habilitado en el parque).';
 -- ---------------------------------------------------------------
 PRINT '--- TEST A-11: Insertar AtraccionTour ---';
 -- ---------------------------------------------------------------
-EXEC turismo.sp_InsertarAtraccionTour
+EXEC turismo.AtraccionTourInsertar
     @p_id_parque         = @id_parque,
     @p_id_tipo_atraccion = @id_tipo_atraccion,
     @p_nombre            = 'Tour Sendero del Cóndor TEST',
@@ -165,7 +165,7 @@ PRINT 'OK — AtraccionTour insertado. ID: ' + CAST(@id_atraccion_tour AS VARCHA
 -- ---------------------------------------------------------------
 PRINT '--- TEST A-12: Insertar TourGuia ---';
 -- ---------------------------------------------------------------
-EXEC turismo.sp_InsertarTourGuia
+EXEC turismo.TourGuiaInsertar
     @p_id_atraccion_tour = @id_atraccion_tour,
     @p_id_guia           = @id_guia;
 PRINT 'OK — TourGuia insertado (guía asignado al tour).';
@@ -173,7 +173,7 @@ PRINT 'OK — TourGuia insertado (guía asignado al tour).';
 -- ---------------------------------------------------------------
 PRINT '--- TEST A-13: Insertar HistorialPrecio ---';
 -- ---------------------------------------------------------------
-EXEC ventas.sp_InsertarHistorialPrecio
+EXEC ventas.HistorialPrecioInsertar
     @p_precio            = 3200.00,
     @p_fecha_desde       = '2025-01-01',
     @p_id_parque         = @id_parque,
@@ -186,7 +186,7 @@ PRINT 'OK — HistorialPrecio insertado. ID: ' + CAST(@id_historial_precio AS VA
 -- ---------------------------------------------------------------
 PRINT '--- TEST A-14: Insertar Concesion ---';
 -- ---------------------------------------------------------------
-EXEC comercial.sp_InsertarConcesion
+EXEC comercial.ConcesionInsertar
     @p_id_parque      = @id_parque,
     @p_id_empresa     = @id_empresa,
     @p_tipo_actividad = 'Restauración y gastronomía TEST',
@@ -201,7 +201,7 @@ PRINT 'OK — Concesion insertada. ID: ' + CAST(@id_concesion AS VARCHAR(10));
 -- ---------------------------------------------------------------
 PRINT '--- TEST A-15: Insertar ObligacionCanon ---';
 -- ---------------------------------------------------------------
-EXEC comercial.sp_InsertarObligacionCanon
+EXEC comercial.ObligacionCanonInsertar
     @p_id_concesion      = @id_concesion,
     @p_mes               = 7,
     @p_anio              = 2025,
@@ -216,7 +216,7 @@ PRINT 'OK — ObligacionCanon insertada. ID: ' + CAST(@id_obligacion AS VARCHAR(
 -- ---------------------------------------------------------------
 PRINT '--- TEST A-16: Insertar PagoCanon ---';
 -- ---------------------------------------------------------------
-EXEC comercial.sp_InsertarPagoCanon
+EXEC comercial.PagoCanonInsertar
     @p_id_obligacion = @id_obligacion,
     @p_fecha_pago    = '2025-07-28',
     @p_monto_pagado  = 85000.00;
@@ -227,7 +227,7 @@ PRINT 'OK — PagoCanon insertado. ID: ' + CAST(@id_pago AS VARCHAR(10));
 -- ---------------------------------------------------------------
 PRINT '--- TEST A-17: Insertar Ticket ---';
 -- ---------------------------------------------------------------
-EXEC ventas.sp_InsertarTicket
+EXEC ventas.TicketInsertar
     @p_punto_venta   = '0001',
     @p_numero        = '00000001',
     @p_fecha_venta   = '2025-09-15 10:30:00',
@@ -240,7 +240,7 @@ PRINT 'OK — Ticket insertado. ID: ' + CAST(@id_ticket AS VARCHAR(10));
 -- ---------------------------------------------------------------
 PRINT '--- TEST A-18: Insertar TicketDetalle ---';
 -- ---------------------------------------------------------------
-EXEC ventas.sp_InsertarTicketDetalle
+EXEC ventas.TicketDetalleInsertar
     @p_id_ticket           = @id_ticket,
     @p_id_parque           = @id_parque,
     @p_id_historial_precio = @id_historial_precio,
@@ -398,21 +398,21 @@ SELECT @id_detalle         = id_detalle       FROM ventas.TicketDetalle WHERE id
 
 -- ---------------------------------------------------------------
 PRINT '--- TEST M-01: Modificar TipoParque ---';
-EXEC parques.sp_ModificarTipoParque
+EXEC parques.TipoParqueModificar
     @p_id_tipo_parque = @id_tipo_parque,
     @p_descripcion    = 'Parque Nacional TEST (mod)';
 PRINT 'OK — TipoParque modificado.';
 
 -- ---------------------------------------------------------------
 PRINT '--- TEST M-02: Modificar TipoVisitante ---';
-EXEC ventas.sp_ModificarTipoVisitante
+EXEC ventas.TipoVisitanteModificar
     @p_id_tipo_visitante = @id_tipo_visitante,
     @p_descripcion       = 'Adulto TEST (mod)';
 PRINT 'OK — TipoVisitante modificado.';
 
 -- ---------------------------------------------------------------
 PRINT '--- TEST M-03: Modificar Guardaparque ---';
-EXEC personal.sp_ModificarGuardaparque
+EXEC personal.GuardaparqueModificar
     @p_id_guardaparque = @id_guardaparque,
     @p_nombre          = 'Laura',
     @p_apellido        = 'Ríos Gómez',
@@ -423,7 +423,7 @@ PRINT 'OK — Guardaparque modificado.';
 
 -- ---------------------------------------------------------------
 PRINT '--- TEST M-04: Modificar GuiaParque (desactivar) ---';
-EXEC turismo.sp_ModificarGuiaParque
+EXEC turismo.GuiaParqueModificar
     @p_id_guia             = @id_guia,
     @p_id_parque           = @id_parque,
     @p_fecha_autorizacion  = '2025-03-01',
@@ -431,7 +431,7 @@ EXEC turismo.sp_ModificarGuiaParque
 PRINT 'OK — GuiaParque desactivado.';
 
 -- Reactivar para no romper los tests siguientes
-EXEC turismo.sp_ModificarGuiaParque
+EXEC turismo.GuiaParqueModificar
     @p_id_guia             = @id_guia,
     @p_id_parque           = @id_parque,
     @p_fecha_autorizacion  = '2025-03-01',
@@ -440,7 +440,7 @@ PRINT 'OK — GuiaParque reactivado.';
 
 -- ---------------------------------------------------------------
 PRINT '--- TEST M-05: Modificar Parque ---';
-EXEC parques.sp_ModificarParque
+EXEC parques.ParqueModificar
     @p_id_parque      = @id_parque,
     @p_codigo_oficial = 'PN-TEST-01',
     @p_nombre         = 'Parque Las Pruebas (mod)',
@@ -451,7 +451,7 @@ PRINT 'OK — Parque modificado.';
 
 -- ---------------------------------------------------------------
 PRINT '--- TEST M-06: Modificar HistorialGuardaparque (cerrar período) ---';
-EXEC personal.sp_ModificarHistorialGuardaparque
+EXEC personal.HistorialGuardaparqueModificar
     @p_id_historial  = @id_historial_gp,
     @p_fecha_egreso  = '2025-12-31',
     @p_motivo_egreso = 'Finalización de período de prueba';
@@ -459,7 +459,7 @@ PRINT 'OK — HistorialGuardaparque: período cerrado.';
 
 -- ---------------------------------------------------------------
 PRINT '--- TEST M-07: Modificar AtraccionTour ---';
-EXEC turismo.sp_ModificarAtraccionTour
+EXEC turismo.AtraccionTourModificar
     @p_id_atraccion_tour = @id_atraccion_tour,
     @p_id_tipo_atraccion = @id_tipo_atraccion,
     @p_nombre            = 'Tour Sendero del Cóndor TEST (mod)',
@@ -470,7 +470,7 @@ PRINT 'OK — AtraccionTour modificado.';
 
 -- ---------------------------------------------------------------
 PRINT '--- TEST M-08: Modificar ObligacionCanon ---';
-EXEC comercial.sp_ModificarObligacionCanon
+EXEC comercial.ObligacionCanonModificar
     @p_id_obligacion     = @id_obligacion,
     @p_monto_obligado    = 87000.00,
     @p_estado            = 'PARCIAL',
@@ -479,7 +479,7 @@ PRINT 'OK — ObligacionCanon modificada.';
 
 -- ---------------------------------------------------------------
 PRINT '--- TEST M-09: Modificar Ticket ---';
-EXEC ventas.sp_ModificarTicket
+EXEC ventas.TicketModificar
     @p_id_ticket     = @id_ticket,
     @p_id_forma_pago = @id_forma_pago,
     @p_total         = 6400.00;
@@ -487,7 +487,7 @@ PRINT 'OK — Ticket modificado.';
 
 -- ---------------------------------------------------------------
 PRINT '--- TEST M-10: Modificar TicketDetalle ---';
-EXEC ventas.sp_ModificarTicketDetalle
+EXEC ventas.TicketDetalleModificar
     @p_id_detalle      = @id_detalle,
     @p_cantidad        = 2,
     @p_precio_unitario = 3200.00,
@@ -516,7 +516,7 @@ PRINT 'ejecuta, la validación falla.';
 PRINT '';
 PRINT '--- TEST V-01: TipoParque — descripción vacía ---';
 BEGIN TRY
-    EXEC parques.sp_InsertarTipoParque @p_descripcion = '';
+    EXEC parques.TipoParqueInsertar @p_descripcion = '';
     PRINT 'FALLO: debería haber generado error.';
 END TRY
 BEGIN CATCH
@@ -526,7 +526,7 @@ END CATCH;
 -- ---------------------------------------------------------------
 PRINT '--- TEST V-02: TipoParque — descripción duplicada ---';
 BEGIN TRY
-    EXEC parques.sp_InsertarTipoParque @p_descripcion = 'Parque Nacional TEST (mod)';
+    EXEC parques.TipoParqueInsertar @p_descripcion = 'Parque Nacional TEST (mod)';
     PRINT 'FALLO: debería haber generado error.';
 END TRY
 BEGIN CATCH
@@ -536,7 +536,7 @@ END CATCH;
 -- ---------------------------------------------------------------
 PRINT '--- TEST V-03: Guardaparque — DNI duplicado ---';
 BEGIN TRY
-    EXEC personal.sp_InsertarGuardaparque
+    EXEC personal.GuardaparqueInsertar
         @p_nombre   = 'Pedro',
         @p_apellido = 'Duplicado',
         @p_dni      = '30111222',  -- DNI ya registrado
@@ -551,7 +551,7 @@ END CATCH;
 -- ---------------------------------------------------------------
 PRINT '--- TEST V-04: Guardaparque — formato email inválido ---';
 BEGIN TRY
-    EXEC personal.sp_InsertarGuardaparque
+    EXEC personal.GuardaparqueInsertar
         @p_nombre   = 'Ana',
         @p_apellido = 'López',
         @p_dni      = '41000001',
@@ -566,7 +566,7 @@ END CATCH;
 -- ---------------------------------------------------------------
 PRINT '--- TEST V-05: Empresa — CUIT con letras ---';
 BEGIN TRY
-    EXEC comercial.sp_InsertarEmpresa
+    EXEC comercial.EmpresaInsertar
         @p_cuit         = '3012345678A',  -- carácter no numérico
         @p_razon_social = 'Empresa inválida S.A.',
         @p_telefono     = NULL,
@@ -583,7 +583,7 @@ PRINT '--- TEST V-06: Parque — superficie negativa ---';
 DECLARE @tp INT;
 SELECT @tp = id_tipo_parque FROM parques.TipoParque WHERE descripcion = 'Parque Nacional TEST (mod)';
 BEGIN TRY
-    EXEC parques.sp_InsertarParque
+    EXEC parques.ParqueInsertar
         @p_codigo_oficial = 'PN-BAD-01',
         @p_nombre         = 'Parque Inválido',
         @p_ubicacion      = 'Ningún lugar',
@@ -598,7 +598,7 @@ END CATCH;
 -- ---------------------------------------------------------------
 PRINT '--- TEST V-07: Parque — tipo de parque inexistente ---';
 BEGIN TRY
-    EXEC parques.sp_InsertarParque
+    EXEC parques.ParqueInsertar
         @p_codigo_oficial = 'PN-BAD-02',
         @p_nombre         = 'Parque FK Error',
         @p_ubicacion      = 'Ningún lugar',
@@ -616,14 +616,14 @@ DECLARE @gp INT, @p INT;
 SELECT @gp = id_guardaparque FROM personal.Guardaparque WHERE dni = '30111222';
 SELECT @p  = id_parque       FROM parques.Parque WHERE codigo_oficial = 'PN-TEST-01';
 -- Primero abrimos un nuevo período (el anterior fue cerrado en la sección modificaciones)
-EXEC personal.sp_InsertarHistorialGuardaparque
+EXEC personal.HistorialGuardaparqueInsertar
     @p_id_guardaparque = @gp,
     @p_id_parque       = @p,
     @p_fecha_ingreso   = '2026-01-01';
 PRINT 'Período activo reabierto para el test.';
 BEGIN TRY
     -- Intentar abrir otro período cuando ya hay uno abierto
-    EXEC personal.sp_InsertarHistorialGuardaparque
+    EXEC personal.HistorialGuardaparqueInsertar
         @p_id_guardaparque = @gp,
         @p_id_parque       = @p,
         @p_fecha_ingreso   = '2026-02-01';
@@ -638,7 +638,7 @@ PRINT '--- TEST V-09: TourGuia — guía sin habilitación activa en el parque -
 DECLARE @at INT, @g2 INT;
 SELECT @at = id_atraccion_tour FROM turismo.AtraccionTour WHERE nombre = 'Tour Sendero del Cóndor TEST (mod)';
 -- Insertar un guía sin habilitación para el parque
-EXEC turismo.sp_InsertarGuia
+EXEC turismo.GuiaInsertar
     @p_nombre                = 'Guía',
     @p_apellido              = 'Sin Habilitación',
     @p_dni                   = '99999901',
@@ -646,7 +646,7 @@ EXEC turismo.sp_InsertarGuia
     @p_vigencia_autorizacion = '2027-12-31';
 SELECT @g2 = id_guia FROM turismo.Guia WHERE dni = '99999901';
 BEGIN TRY
-    EXEC turismo.sp_InsertarTourGuia
+    EXEC turismo.TourGuiaInsertar
         @p_id_atraccion_tour = @at,
         @p_id_guia           = @g2;  -- no tiene GuiaParque para este parque
     PRINT 'FALLO: debería haber generado error.';
@@ -660,7 +660,7 @@ PRINT '--- TEST V-10: ObligacionCanon — estado inválido ---';
 DECLARE @con INT;
 SELECT @con = id_concesion FROM comercial.Concesion WHERE tipo_actividad = 'Restauración y gastronomía TEST';
 BEGIN TRY
-    EXEC comercial.sp_InsertarObligacionCanon
+    EXEC comercial.ObligacionCanonInsertar
         @p_id_concesion      = @con,
         @p_mes               = 8,
         @p_anio              = 2025,
@@ -676,7 +676,7 @@ END CATCH;
 -- ---------------------------------------------------------------
 PRINT '--- TEST V-11: ObligacionCanon — período duplicado ---';
 BEGIN TRY
-    EXEC comercial.sp_InsertarObligacionCanon
+    EXEC comercial.ObligacionCanonInsertar
         @p_id_concesion      = @con,
         @p_mes               = 7,   -- combinación concesion+mes+año ya existe
         @p_anio              = 2025,
@@ -696,13 +696,13 @@ SELECT @ob = id_obligacion FROM comercial.ObligacionCanon
 WHERE id_concesion = @con AND mes = 7 AND anio = 2025;
 -- La obligación fue marcada como PARCIAL en la sección modificaciones;
 -- la marcamos como PAGADO para el test
-EXEC comercial.sp_ModificarObligacionCanon
+EXEC comercial.ObligacionCanonModificar
     @p_id_obligacion     = @ob,
     @p_monto_obligado    = 87000.00,
     @p_estado            = 'PAGADO',
     @p_fecha_vencimiento = '2025-08-15';
 BEGIN TRY
-    EXEC comercial.sp_InsertarPagoCanon
+    EXEC comercial.PagoCanonInsertar
         @p_id_obligacion = @ob,
         @p_fecha_pago    = '2025-08-01',
         @p_monto_pagado  = 1000.00;
@@ -717,7 +717,7 @@ PRINT '--- TEST V-13: Ticket — total negativo ---';
 DECLARE @fp INT;
 SELECT @fp = id_forma_pago FROM ventas.FormaPago WHERE descripcion = 'Efectivo TEST';
 BEGIN TRY
-    EXEC ventas.sp_InsertarTicket
+    EXEC ventas.TicketInsertar
         @p_punto_venta   = '0001',
         @p_numero        = '99999999',
         @p_fecha_venta   = '2025-10-01 08:00:00',
@@ -732,7 +732,7 @@ END CATCH;
 -- ---------------------------------------------------------------
 PRINT '--- TEST V-14: Ticket — punto de venta inválido ---';
 BEGIN TRY
-    EXEC ventas.sp_InsertarTicket
+    EXEC ventas.TicketInsertar
         @p_punto_venta   = 'AB01',  -- no numérico
         @p_numero        = '00000002',
         @p_fecha_venta   = '2025-10-01 08:00:00',
@@ -751,7 +751,7 @@ SELECT @tk = id_ticket FROM ventas.Ticket WHERE punto_venta = '0001' AND numero 
 DECLARE @pk INT;
 SELECT @pk = id_parque FROM parques.Parque WHERE codigo_oficial = 'PN-TEST-01';
 BEGIN TRY
-    EXEC ventas.sp_InsertarTicketDetalle
+    EXEC ventas.TicketDetalleInsertar
         @p_id_ticket           = @tk,
         @p_id_parque           = @pk,
         @p_id_historial_precio = NULL,  -- ambos NULL: viola CK_TicketDetalle_Item
@@ -772,7 +772,7 @@ PRINT '--- TEST V-16: AtraccionTour — cupo máximo cero ---';
 DECLARE @ta INT;
 SELECT @ta = id_tipo_atraccion FROM turismo.TipoAtraccion WHERE descripcion = 'Senderismo TEST';
 BEGIN TRY
-    EXEC turismo.sp_InsertarAtraccionTour
+    EXEC turismo.AtraccionTourInsertar
         @p_id_parque         = @pk,
         @p_id_tipo_atraccion = @ta,
         @p_nombre            = 'Tour inválido',
@@ -788,7 +788,7 @@ END CATCH;
 -- ---------------------------------------------------------------
 PRINT '--- TEST V-17: Concesion — canon mensual negativo ---';
 BEGIN TRY
-    EXEC comercial.sp_InsertarConcesion
+    EXEC comercial.ConcesionInsertar
         @p_id_parque      = @pk,
         @p_id_empresa     = (SELECT id_empresa FROM comercial.Empresa WHERE cuit = '30123456789'),
         @p_tipo_actividad = 'Actividad inválida',
@@ -804,7 +804,7 @@ END CATCH;
 -- ---------------------------------------------------------------
 PRINT '--- TEST V-18: Eliminar Parque con dependencias ---';
 BEGIN TRY
-    EXEC parques.sp_EliminarParque @p_id_parque = @pk;
+    EXEC parques.ParqueEliminar @p_id_parque = @pk;
     PRINT 'FALLO: debería haber generado error (existen concesiones).';
 END TRY
 BEGIN CATCH
@@ -814,11 +814,11 @@ END CATCH;
 -- ---------------------------------------------------------------
 PRINT '--- TEST V-19: Eliminar Guardaparque ya inactivo ---';
 -- Primero lo desactivamos
-EXEC personal.sp_EliminarGuardaparque
+EXEC personal.GuardaparqueEliminar
     @p_id_guardaparque = (SELECT id_guardaparque FROM personal.Guardaparque WHERE dni = '30111222');
 -- Intentar desactivarlo de nuevo
 BEGIN TRY
-    EXEC personal.sp_EliminarGuardaparque
+    EXEC personal.GuardaparqueEliminar
         @p_id_guardaparque = (SELECT id_guardaparque FROM personal.Guardaparque WHERE dni = '30111222');
     PRINT 'FALLO: debería haber generado error.';
 END TRY
@@ -829,7 +829,7 @@ END CATCH;
 -- ---------------------------------------------------------------
 PRINT '--- TEST V-20: Modificar con ID inexistente (genérico) ---';
 BEGIN TRY
-    EXEC parques.sp_ModificarTipoParque
+    EXEC parques.TipoParqueModificar
         @p_id_tipo_parque = 999999,
         @p_descripcion    = 'No existe';
     PRINT 'FALLO: debería haber generado error.';
@@ -885,43 +885,43 @@ SELECT @id_forma_pago      = id_forma_pago      FROM ventas.FormaPago         WH
 SELECT @id_tipo_atraccion  = id_tipo_atraccion  FROM turismo.TipoAtraccion    WHERE descripcion     = 'Senderismo TEST';
 
 -- TicketDetalle
-EXEC ventas.sp_EliminarTicketDetalle @p_id_detalle = @id_detalle;
+EXEC ventas.TicketDetalleEliminar @p_id_detalle = @id_detalle;
 PRINT 'OK — TicketDetalle eliminado.';
 
 -- Ticket
-EXEC ventas.sp_EliminarTicket @p_id_ticket = @id_ticket;
+EXEC ventas.TicketEliminar @p_id_ticket = @id_ticket;
 PRINT 'OK — Ticket eliminado.';
 
 -- PagoCanon
-EXEC comercial.sp_EliminarPagoCanon @p_id_pago = @id_pago;
+EXEC comercial.PagoCanonEliminar @p_id_pago = @id_pago;
 PRINT 'OK — PagoCanon eliminado.';
 
 -- ObligacionCanon
-EXEC comercial.sp_EliminarObligacionCanon @p_id_obligacion = @id_obligacion;
+EXEC comercial.ObligacionCanonEliminar @p_id_obligacion = @id_obligacion;
 PRINT 'OK — ObligacionCanon eliminada.';
 
 -- Concesion
-EXEC comercial.sp_EliminarConcesion @p_id_concesion = @id_concesion;
+EXEC comercial.ConcesionEliminar @p_id_concesion = @id_concesion;
 PRINT 'OK — Concesion eliminada.';
 
 -- HistorialPrecio
-EXEC ventas.sp_EliminarHistorialPrecio @p_id_historial_precio = @id_historial_precio;
+EXEC ventas.HistorialPrecioEliminar @p_id_historial_precio = @id_historial_precio;
 PRINT 'OK — HistorialPrecio eliminado.';
 
 -- TourGuia
-EXEC turismo.sp_EliminarTourGuia @p_id_atraccion_tour = @id_atraccion_tour, @p_id_guia = @id_guia;
+EXEC turismo.TourGuiaEliminar @p_id_atraccion_tour = @id_atraccion_tour, @p_id_guia = @id_guia;
 PRINT 'OK — TourGuia eliminado.';
 
 -- AtraccionTour
-EXEC turismo.sp_EliminarAtraccionTour @p_id_atraccion_tour = @id_atraccion_tour;
+EXEC turismo.AtraccionTourEliminar @p_id_atraccion_tour = @id_atraccion_tour;
 PRINT 'OK — AtraccionTour eliminado.';
 
 -- GuiaParque
-EXEC turismo.sp_EliminarGuiaParque @p_id_guia = @id_guia, @p_id_parque = @id_parque;
+EXEC turismo.GuiaParqueEliminar @p_id_guia = @id_guia, @p_id_parque = @id_parque;
 PRINT 'OK — GuiaParque eliminado.';
 
 -- HistorialGuardaparque (período activo reabierto en V-08)
-EXEC personal.sp_EliminarHistorialGuardaparque @p_id_historial = @id_historial_gp;
+EXEC personal.HistorialGuardaparqueEliminar @p_id_historial = @id_historial_gp;
 PRINT 'OK — HistorialGuardaparque (período activo) eliminado.';
 
 -- Eliminar todos los historiales restantes del guardaparque de prueba
@@ -929,19 +929,19 @@ DELETE FROM personal.HistorialGuardaparque WHERE id_guardaparque = @id_guardapar
 PRINT 'OK — Historiales restantes del guardaparque de prueba eliminados.';
 
 -- Parque
-EXEC parques.sp_EliminarParque @p_id_parque = @id_parque;
+EXEC parques.ParqueEliminar @p_id_parque = @id_parque;
 PRINT 'OK — Parque eliminado.';
 
 -- Empresa
-EXEC comercial.sp_EliminarEmpresa @p_id_empresa = @id_empresa;
+EXEC comercial.EmpresaEliminar @p_id_empresa = @id_empresa;
 PRINT 'OK — Empresa eliminada.';
 
 -- Guía sin habilitación (auxiliar del test V-09)
-EXEC turismo.sp_EliminarGuia @p_id_guia = @id_guia_sin_hab;
+EXEC turismo.GuiaEliminar @p_id_guia = @id_guia_sin_hab;
 PRINT 'OK — Guia auxiliar eliminado.';
 
 -- Guia principal
-EXEC turismo.sp_EliminarGuia @p_id_guia = @id_guia;
+EXEC turismo.GuiaEliminar @p_id_guia = @id_guia;
 PRINT 'OK — Guia eliminado.';
 
 -- Guardaparque (baja lógica ya aplicada en V-19; verificar que está inactivo)
@@ -950,19 +950,19 @@ SELECT 'Guardaparque (baja lógica)' AS tabla,
 FROM personal.Guardaparque WHERE id_guardaparque = @id_guardaparque;
 
 -- TipoAtraccion
-EXEC turismo.sp_EliminarTipoAtraccion @p_id_tipo_atraccion = @id_tipo_atraccion;
+EXEC turismo.TipoAtraccionEliminar @p_id_tipo_atraccion = @id_tipo_atraccion;
 PRINT 'OK — TipoAtraccion eliminado.';
 
 -- FormaPago
-EXEC ventas.sp_EliminarFormaPago @p_id_forma_pago = @id_forma_pago;
+EXEC ventas.FormaPagoEliminar @p_id_forma_pago = @id_forma_pago;
 PRINT 'OK — FormaPago eliminado.';
 
 -- TipoVisitante
-EXEC ventas.sp_EliminarTipoVisitante @p_id_tipo_visitante = @id_tipo_visitante;
+EXEC ventas.TipoVisitanteEliminar @p_id_tipo_visitante = @id_tipo_visitante;
 PRINT 'OK — TipoVisitante eliminado.';
 
 -- TipoParque
-EXEC parques.sp_EliminarTipoParque @p_id_tipo_parque = @id_tipo_parque;
+EXEC parques.TipoParqueEliminar @p_id_tipo_parque = @id_tipo_parque;
 PRINT 'OK — TipoParque eliminado.';
 
 GO
