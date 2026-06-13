@@ -44,16 +44,22 @@ GO
 -- Tipo de tabla para pasar detalles de venta como parámetro
 -- ==============================================================
 
-CREATE TYPE ventas.tt_DetalleVenta AS TABLE (
-    id_parque           INT           NOT NULL,
-    id_historial_precio INT           NULL,
-    id_tipo_visitante   INT           NULL,
-    id_atraccion_tour   INT           NULL,
-    fecha_acceso        DATE          NOT NULL,
-    cantidad            INT           NOT NULL,
-    precio_unitario     DECIMAL(12,2) NOT NULL,
-    subtotal            DECIMAL(12,2) NOT NULL
-);
+IF NOT EXISTS (SELECT 1 FROM sys.types WHERE name = 'tt_DetalleVenta' AND schema_id = SCHEMA_ID('ventas'))
+BEGIN
+    PRINT 'Creando Type ventas.tt_DetalleVenta...';
+    CREATE TYPE ventas.tt_DetalleVenta AS TABLE (
+        id_parque           INT           NOT NULL,
+        id_historial_precio INT           NULL,
+        id_tipo_visitante   INT           NULL,
+        id_atraccion_tour   INT           NULL,
+        fecha_acceso        DATE          NOT NULL,
+        cantidad            INT           NOT NULL,
+        precio_unitario     DECIMAL(12,2) NOT NULL,
+        subtotal            DECIMAL(12,2) NOT NULL
+    );
+END
+ELSE
+    PRINT 'OK - Type ventas.tt_DetalleVenta ya existe, se omite creación.';
 GO
 
 -- ==============================================================
@@ -64,7 +70,14 @@ GO
 --    Retorna el id del ticket generado.
 -- ==============================================================
 
-CREATE PROCEDURE ventas.sp_RegistrarVenta
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('ventas.sp_RegistrarVenta') AND type = 'P')
+    PRINT 'Creando Procedure ventas.sp_RegistrarVenta...';
+ELSE
+    PRINT 'OK - Procedure ventas.sp_RegistrarVenta ya existe, se omite creación.';
+
+GO
+
+CREATE OR ALTER PROCEDURE ventas.sp_RegistrarVenta
     @p_punto_venta   CHAR(4),
     @p_numero        VARCHAR(50),
     @p_fecha_venta   DATETIME2,
@@ -159,6 +172,7 @@ BEGIN
         RAISERROR(@err1, 16, 1);
     END CATCH;
 END
+
 GO
 
 -- ==============================================================
@@ -169,7 +183,14 @@ GO
 --    Retorna el id de la concesión y la cantidad de meses.
 -- ==============================================================
 
-CREATE PROCEDURE comercial.sp_RegistrarConcesionConObligaciones
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('comercial.sp_RegistrarConcesionConObligaciones') AND type = 'P')
+    PRINT 'Creando Procedure comercial.sp_RegistrarConcesionConObligaciones...';
+ELSE
+    PRINT 'OK - Procedure comercial.sp_RegistrarConcesionConObligaciones ya existe, se omite creación.';
+
+GO
+
+CREATE OR ALTER PROCEDURE comercial.sp_RegistrarConcesionConObligaciones
     @p_id_parque       INT,
     @p_id_empresa      INT,
     @p_tipo_actividad  VARCHAR(100),
@@ -249,6 +270,7 @@ BEGIN
         RAISERROR(@err2, 16, 1);
     END CATCH;
 END
+
 GO
 
 -- ==============================================================
@@ -260,7 +282,14 @@ GO
 --    Retorna el estado resultante y el total acumulado.
 -- ==============================================================
 
-CREATE PROCEDURE comercial.sp_RegistrarPagoCanon
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('comercial.sp_RegistrarPagoCanon') AND type = 'P')
+    PRINT 'Creando Procedure comercial.sp_RegistrarPagoCanon...';
+ELSE
+    PRINT 'OK - Procedure comercial.sp_RegistrarPagoCanon ya existe, se omite creación.';
+
+GO
+
+CREATE OR ALTER PROCEDURE comercial.sp_RegistrarPagoCanon
     @p_id_obligacion INT,
     @p_fecha_pago    DATE,
     @p_monto_pagado  DECIMAL(12,2)
@@ -316,6 +345,7 @@ BEGIN
         RAISERROR(@err3, 16, 1);
     END CATCH;
 END
+
 GO
 
 -- ==============================================================
@@ -326,7 +356,14 @@ GO
 --    transacción para garantizar consistencia.
 -- ==============================================================
 
-CREATE PROCEDURE personal.sp_TransferirGuardaparque
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('personal.sp_TransferirGuardaparque') AND type = 'P')
+    PRINT 'Creando Procedure personal.sp_TransferirGuardaparque...';
+ELSE
+    PRINT 'OK - Procedure personal.sp_TransferirGuardaparque ya existe, se omite creación.';
+
+GO
+
+CREATE OR ALTER PROCEDURE personal.sp_TransferirGuardaparque
     @p_id_guardaparque     INT,
     @p_id_parque_destino   INT,
     @p_fecha_transferencia DATE,
@@ -385,6 +422,7 @@ BEGIN
         RAISERROR(@err4, 16, 1);
     END CATCH;
 END
+
 GO
 
 -- ==============================================================
@@ -395,7 +433,14 @@ GO
 --    registrado para esa combinación.
 -- ==============================================================
 
-CREATE PROCEDURE ventas.sp_ActualizarPrecioEntrada
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('ventas.sp_ActualizarPrecioEntrada') AND type = 'P')
+    PRINT 'Creando Procedure ventas.sp_ActualizarPrecioEntrada...';
+ELSE
+    PRINT 'OK - Procedure ventas.sp_ActualizarPrecioEntrada ya existe, se omite creación.';
+
+GO
+
+CREATE OR ALTER PROCEDURE ventas.sp_ActualizarPrecioEntrada
     @p_id_parque         INT,
     @p_id_tipo_visitante INT,
     @p_nuevo_precio      DECIMAL(12,2),
@@ -436,4 +481,5 @@ BEGIN
 
     SELECT SCOPE_IDENTITY() AS id_historial_precio_generado;
 END
+
 GO
