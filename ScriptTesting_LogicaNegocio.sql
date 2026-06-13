@@ -5,17 +5,17 @@ Materia:     3641 - Bases de Datos Aplicada
 Grupo:       11
 Integrantes: Federico Augusto Cusa Ortiz, Carla Abril Romero, Lautaro Garat
 Fecha:       09/06/2026
-Descripción: Script de pruebas para los procedimientos
-             almacenados de lógica de negocio.
+Descripciï¿½n: Script de pruebas para los procedimientos
+             almacenados de lï¿½gica de negocio.
 
              Se validan las operaciones de registro de ventas,
-             gestión de concesiones, pagos de canon,
-             transferencia de guardaparques y actualización de
+             gestiï¿½n de concesiones, pagos de canon,
+             transferencia de guardaparques y actualizaciï¿½n de
              precios de entrada, verificando tanto escenarios
              exitosos como el comportamiento ante datos
-             inválidos.
+             invï¿½lidos.
 
-             Orden de ejecución:
+             Orden de ejecuciï¿½n:
                1. ScriptCreacionTablasYSchemas.sql
                2. ScriptABM_SPs.sql
                3. ScriptLogicaNegocio_SPs.sql
@@ -27,13 +27,13 @@ USE ParquesNacionalesDB;
 GO
 
 -- ==============================================================
--- PREPARACIÓN DE DATOS PREREQUISITOS
--- (Las tablas están vacías; se insertan los datos mínimos
---  necesarios para testear los SPs de lógica de negocio)
+-- PREPARACIï¿½N DE DATOS PREREQUISITOS
+-- (Las tablas estï¿½n vacï¿½as; se insertan los datos mï¿½nimos
+--  necesarios para testear los SPs de lï¿½gica de negocio)
 -- ==============================================================
 
 PRINT '==============================================================';
-PRINT ' PREPARACIÓN — Inserción de datos base para los tests';
+PRINT ' PREPARACIï¿½N ï¿½ Inserciï¿½n de datos base para los tests';
 PRINT '==============================================================';
 
 DECLARE
@@ -55,46 +55,46 @@ SET NOCOUNT ON
 -- TipoParque
 EXEC parques.sp_InsertarTipoParque @p_descripcion = 'Parque Nacional LN-TEST';
 SELECT @id_tipo_parque = id_tipo_parque FROM parques.TipoParque WHERE descripcion = 'Parque Nacional LN-TEST';
-PRINT 'OK — TipoParque insertado. ID: ' + CAST(@id_tipo_parque AS VARCHAR(10));
+PRINT 'OK ï¿½ TipoParque insertado. ID: ' + CAST(@id_tipo_parque AS VARCHAR(10));
 
 -- TipoVisitante
 EXEC ventas.sp_InsertarTipoVisitante @p_descripcion = 'Adulto LN-TEST';
 SELECT @id_tipo_visitante = id_tipo_visitante FROM ventas.TipoVisitante WHERE descripcion = 'Adulto LN-TEST';
-PRINT 'OK — TipoVisitante insertado. ID: ' + CAST(@id_tipo_visitante AS VARCHAR(10));
+PRINT 'OK ï¿½ TipoVisitante insertado. ID: ' + CAST(@id_tipo_visitante AS VARCHAR(10));
 
 EXEC ventas.sp_InsertarTipoVisitante @p_descripcion = 'Jubilado LN-TEST';
 SELECT @id_tipo_visitante2 = id_tipo_visitante FROM ventas.TipoVisitante WHERE descripcion = 'Jubilado LN-TEST';
-PRINT 'OK — TipoVisitante 2 insertado. ID: ' + CAST(@id_tipo_visitante2 AS VARCHAR(10));
+PRINT 'OK ï¿½ TipoVisitante 2 insertado. ID: ' + CAST(@id_tipo_visitante2 AS VARCHAR(10));
 
 -- FormaPago
 EXEC ventas.sp_InsertarFormaPago @p_descripcion = 'Efectivo LN-TEST';
 SELECT @id_forma_pago = id_forma_pago FROM ventas.FormaPago WHERE descripcion = 'Efectivo LN-TEST';
-PRINT 'OK — FormaPago insertado. ID: ' + CAST(@id_forma_pago AS VARCHAR(10));
+PRINT 'OK ï¿½ FormaPago insertado. ID: ' + CAST(@id_forma_pago AS VARCHAR(10));
 
 -- TipoAtraccion
 EXEC turismo.sp_InsertarTipoAtraccion @p_descripcion = 'Senderismo LN-TEST';
 SELECT @id_tipo_atraccion = id_tipo_atraccion FROM turismo.TipoAtraccion WHERE descripcion = 'Senderismo LN-TEST';
-PRINT 'OK — TipoAtraccion insertado. ID: ' + CAST(@id_tipo_atraccion AS VARCHAR(10));
+PRINT 'OK ï¿½ TipoAtraccion insertado. ID: ' + CAST(@id_tipo_atraccion AS VARCHAR(10));
 
 -- Parque
 EXEC parques.sp_InsertarParque
     @p_codigo_oficial = 'PN-LN-TEST-01',
-    @p_nombre         = 'Parque Lógica Negocio TEST',
+    @p_nombre         = 'Parque Lï¿½gica Negocio TEST',
     @p_ubicacion      = 'Provincia de Testing, Argentina',
     @p_superficie     = 15000.00,
     @p_id_tipo_parque = @id_tipo_parque;
 SELECT @id_parque = id_parque FROM parques.Parque WHERE codigo_oficial = 'PN-LN-TEST-01';
-PRINT 'OK — Parque insertado. ID: ' + CAST(@id_parque AS VARCHAR(10));
+PRINT 'OK ï¿½ Parque insertado. ID: ' + CAST(@id_parque AS VARCHAR(10));
 
--- Parque 2 (para tests con múltiples parques)
+-- Parque 2 (para tests con mï¿½ltiples parques)
 EXEC parques.sp_InsertarParque
     @p_codigo_oficial = 'PN-LN-TEST-02',
-    @p_nombre         = 'Parque Lógica Negocio 2 TEST',
+    @p_nombre         = 'Parque Lï¿½gica Negocio 2 TEST',
     @p_ubicacion      = 'Buenos Aires, Argentina',
     @p_superficie     = 8000.00,
     @p_id_tipo_parque = @id_tipo_parque;
 SELECT @id_parque2 = id_parque FROM parques.Parque WHERE codigo_oficial = 'PN-LN-TEST-02';
-PRINT 'OK — Parque 2 insertado. ID: ' + CAST(@id_parque2 AS VARCHAR(10));
+PRINT 'OK ï¿½ Parque 2 insertado. ID: ' + CAST(@id_parque2 AS VARCHAR(10));
 
 -- HistorialPrecio (entrada para Adulto en Parque 1)
 EXEC ventas.sp_InsertarHistorialPrecio
@@ -105,7 +105,7 @@ EXEC ventas.sp_InsertarHistorialPrecio
 SELECT @id_historial_precio = id_historial_precio
 FROM ventas.HistorialPrecio
 WHERE id_parque = @id_parque AND id_tipo_visitante = @id_tipo_visitante;
-PRINT 'OK — HistorialPrecio insertado. ID: ' + CAST(@id_historial_precio AS VARCHAR(10));
+PRINT 'OK ï¿½ HistorialPrecio insertado. ID: ' + CAST(@id_historial_precio AS VARCHAR(10));
 
 -- HistorialPrecio (entrada para Jubilado en Parque 1)
 EXEC ventas.sp_InsertarHistorialPrecio
@@ -116,7 +116,7 @@ EXEC ventas.sp_InsertarHistorialPrecio
 SELECT @id_historial_precio2 = id_historial_precio
 FROM ventas.HistorialPrecio
 WHERE id_parque = @id_parque AND id_tipo_visitante = @id_tipo_visitante2;
-PRINT 'OK — HistorialPrecio 2 insertado. ID: ' + CAST(@id_historial_precio2 AS VARCHAR(10));
+PRINT 'OK ï¿½ HistorialPrecio 2 insertado. ID: ' + CAST(@id_historial_precio2 AS VARCHAR(10));
 
 -- AtraccionTour
 EXEC turismo.sp_InsertarAtraccionTour
@@ -128,26 +128,26 @@ EXEC turismo.sp_InsertarAtraccionTour
     @p_duracion          = 120;
 SELECT @id_atraccion_tour = id_atraccion_tour
 FROM turismo.AtraccionTour WHERE nombre = 'Tour Cascada LN-TEST';
-PRINT 'OK — AtraccionTour insertado. ID: ' + CAST(@id_atraccion_tour AS VARCHAR(10));
+PRINT 'OK ï¿½ AtraccionTour insertado. ID: ' + CAST(@id_atraccion_tour AS VARCHAR(10));
 
 -- Empresa (necesaria para tests de concesiones)
 EXEC comercial.sp_InsertarEmpresa
     @p_cuit         = '30712345678',
-    @p_razon_social = 'Concesiones Patagónicas S.A. LN-TEST',
+    @p_razon_social = 'Concesiones Patagï¿½nicas S.A. LN-TEST',
     @p_telefono     = '0299-555-1234',
     @p_email        = 'contacto@concpat.lntest',
-    @p_direccion    = 'Av. San Martín 200, Neuquén';
+    @p_direccion    = 'Av. San Martï¿½n 200, Neuquï¿½n';
 SELECT @id_empresa = id_empresa FROM comercial.Empresa WHERE cuit = '30712345678';
-PRINT 'OK — Empresa insertada. ID: ' + CAST(@id_empresa AS VARCHAR(10));
+PRINT 'OK ï¿½ Empresa insertada. ID: ' + CAST(@id_empresa AS VARCHAR(10));
 
 PRINT '';
 PRINT '==============================================================';
-PRINT ' SECCIÓN 1 — ventas.sp_RegistrarVenta: CASOS EXITOSOS';
+PRINT ' SECCIï¿½N 1 ï¿½ ventas.sp_RegistrarVenta: CASOS EXITOSOS';
 PRINT '==============================================================';
 
 -- ---------------------------------------------------------------
 PRINT '';
-PRINT '--- TEST LN-01: Venta exitosa con 1 línea de entrada ---';
+PRINT '--- TEST LN-01: Venta exitosa con 1 lï¿½nea de entrada ---';
 -- ---------------------------------------------------------------
 DECLARE @detalles01 ventas.tt_DetalleVenta;
 INSERT INTO @detalles01 (id_parque, id_historial_precio, id_tipo_visitante, id_atraccion_tour, fecha_acceso, cantidad, precio_unitario, subtotal)
@@ -161,10 +161,10 @@ BEGIN TRY
         @p_id_forma_pago = @id_forma_pago,
         @p_total         = 7000.00,
         @p_detalles      = @detalles01;
-    PRINT 'OK — Venta registrada correctamente (1 línea de entrada).';
+    PRINT 'OK ï¿½ Venta registrada correctamente (1 lï¿½nea de entrada).';
 END TRY
 BEGIN CATCH
-    PRINT 'FALLO — ' + ERROR_MESSAGE();
+    PRINT 'FALLO ï¿½ ' + ERROR_MESSAGE();
 END CATCH;
 
 -- Evidencia
@@ -177,7 +177,7 @@ WHERE t.numero = 'LN-00000001';
 
 -- ---------------------------------------------------------------
 PRINT '';
-PRINT '--- TEST LN-02: Venta exitosa con 1 línea de atracción/tour ---';
+PRINT '--- TEST LN-02: Venta exitosa con 1 lï¿½nea de atracciï¿½n/tour ---';
 -- ---------------------------------------------------------------
 DECLARE @detalles02 ventas.tt_DetalleVenta;
 INSERT INTO @detalles02 (id_parque, id_historial_precio, id_tipo_visitante, id_atraccion_tour, fecha_acceso, cantidad, precio_unitario, subtotal)
@@ -191,10 +191,10 @@ BEGIN TRY
         @p_id_forma_pago = @id_forma_pago,
         @p_total         = 6000.00,
         @p_detalles      = @detalles02;
-    PRINT 'OK — Venta registrada correctamente (1 línea de tour).';
+    PRINT 'OK ï¿½ Venta registrada correctamente (1 lï¿½nea de tour).';
 END TRY
 BEGIN CATCH
-    PRINT 'FALLO — ' + ERROR_MESSAGE();
+    PRINT 'FALLO ï¿½ ' + ERROR_MESSAGE();
 END CATCH;
 
 -- Evidencia
@@ -207,16 +207,16 @@ WHERE t.numero = 'LN-00000002';
 
 -- ---------------------------------------------------------------
 PRINT '';
-PRINT '--- TEST LN-03: Venta exitosa con múltiples líneas mixtas ---';
+PRINT '--- TEST LN-03: Venta exitosa con mï¿½ltiples lï¿½neas mixtas ---';
 -- ---------------------------------------------------------------
 DECLARE @detalles03 ventas.tt_DetalleVenta;
--- Línea 1: 2 entradas Adulto
+-- Lï¿½nea 1: 2 entradas Adulto
 INSERT INTO @detalles03 (id_parque, id_historial_precio, id_tipo_visitante, id_atraccion_tour, fecha_acceso, cantidad, precio_unitario, subtotal)
 VALUES (@id_parque, @id_historial_precio, @id_tipo_visitante, NULL, '2026-06-20', 2, 3500.00, 7000.00);
--- Línea 2: 1 entrada Jubilado
+-- Lï¿½nea 2: 1 entrada Jubilado
 INSERT INTO @detalles03 (id_parque, id_historial_precio, id_tipo_visitante, id_atraccion_tour, fecha_acceso, cantidad, precio_unitario, subtotal)
 VALUES (@id_parque, @id_historial_precio2, @id_tipo_visitante2, NULL, '2026-06-20', 1, 1750.00, 1750.00);
--- Línea 3: 3 tours
+-- Lï¿½nea 3: 3 tours
 INSERT INTO @detalles03 (id_parque, id_historial_precio, id_tipo_visitante, id_atraccion_tour, fecha_acceso, cantidad, precio_unitario, subtotal)
 VALUES (@id_parque, NULL, NULL, @id_atraccion_tour, '2026-06-20', 3, 2000.00, 6000.00);
 
@@ -228,10 +228,10 @@ BEGIN TRY
         @p_id_forma_pago = @id_forma_pago,
         @p_total         = 14750.00,
         @p_detalles      = @detalles03;
-    PRINT 'OK — Venta registrada correctamente (3 líneas mixtas). Total: 14750.00';
+    PRINT 'OK ï¿½ Venta registrada correctamente (3 lï¿½neas mixtas). Total: 14750.00';
 END TRY
 BEGIN CATCH
-    PRINT 'FALLO — ' + ERROR_MESSAGE();
+    PRINT 'FALLO ï¿½ ' + ERROR_MESSAGE();
 END CATCH;
 
 -- Evidencia
@@ -258,22 +258,22 @@ BEGIN TRY
         @p_id_forma_pago = @id_forma_pago,
         @p_total         = 0.00,
         @p_detalles      = @detalles04;
-    PRINT 'OK — Venta con total $0 registrada correctamente (entrada gratuita).';
+    PRINT 'OK ï¿½ Venta con total $0 registrada correctamente (entrada gratuita).';
 END TRY
 BEGIN CATCH
-    PRINT 'FALLO — ' + ERROR_MESSAGE();
+    PRINT 'FALLO ï¿½ ' + ERROR_MESSAGE();
 END CATCH;
 
 PRINT '';
 PRINT '==============================================================';
-PRINT ' SECCIÓN 2 — ventas.sp_RegistrarVenta: CASOS DE ERROR';
+PRINT ' SECCIï¿½N 2 ï¿½ ventas.sp_RegistrarVenta: CASOS DE ERROR';
 PRINT '==============================================================';
 PRINT 'Cada test espera recibir un error. Si el bloque CATCH no';
-PRINT 'ejecuta, la validación falla.';
+PRINT 'ejecuta, la validaciï¿½n falla.';
 
 -- ---------------------------------------------------------------
 PRINT '';
-PRINT '--- TEST LN-05: Punto de venta inválido (no numérico) ---';
+PRINT '--- TEST LN-05: Punto de venta invï¿½lido (no numï¿½rico) ---';
 -- ---------------------------------------------------------------
 DECLARE @detalles05 ventas.tt_DetalleVenta;
 INSERT INTO @detalles05 (id_parque, id_historial_precio, id_tipo_visitante, id_atraccion_tour, fecha_acceso, cantidad, precio_unitario, subtotal)
@@ -287,15 +287,15 @@ BEGIN TRY
         @p_id_forma_pago = @id_forma_pago,
         @p_total         = 3500.00,
         @p_detalles      = @detalles05;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
 PRINT '';
-PRINT '--- TEST LN-06: Número de ticket vacío ---';
+PRINT '--- TEST LN-06: Nï¿½mero de ticket vacï¿½o ---';
 -- ---------------------------------------------------------------
 DECLARE @detalles06 ventas.tt_DetalleVenta;
 INSERT INTO @detalles06 (id_parque, id_historial_precio, id_tipo_visitante, id_atraccion_tour, fecha_acceso, cantidad, precio_unitario, subtotal)
@@ -309,10 +309,10 @@ BEGIN TRY
         @p_id_forma_pago = @id_forma_pago,
         @p_total         = 3500.00,
         @p_detalles      = @detalles06;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
@@ -331,10 +331,10 @@ BEGIN TRY
         @p_id_forma_pago = @id_forma_pago,
         @p_total         = 3500.00,
         @p_detalles      = @detalles07;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
@@ -353,10 +353,10 @@ BEGIN TRY
         @p_id_forma_pago = 999999,
         @p_total         = 3500.00,
         @p_detalles      = @detalles08;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
@@ -375,15 +375,15 @@ BEGIN TRY
         @p_id_forma_pago = @id_forma_pago,
         @p_total         = -100.00,
         @p_detalles      = @detalles09;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
 PRINT '';
-PRINT '--- TEST LN-10: Sin líneas de detalle (tabla vacía) ---';
+PRINT '--- TEST LN-10: Sin lï¿½neas de detalle (tabla vacï¿½a) ---';
 -- ---------------------------------------------------------------
 DECLARE @detalles10 ventas.tt_DetalleVenta;
 -- No insertamos nada en @detalles10
@@ -396,10 +396,10 @@ BEGIN TRY
         @p_id_forma_pago = @id_forma_pago,
         @p_total         = 0.00,
         @p_detalles      = @detalles10;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
@@ -418,10 +418,10 @@ BEGIN TRY
         @p_id_forma_pago = @id_forma_pago,
         @p_total         = 3500.00,
         @p_detalles      = @detalles11;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
@@ -440,10 +440,10 @@ BEGIN TRY
         @p_id_forma_pago = @id_forma_pago,
         @p_total         = 0.00,
         @p_detalles      = @detalles12;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
@@ -462,10 +462,10 @@ BEGIN TRY
         @p_id_forma_pago = @id_forma_pago,
         @p_total         = -500.00,
         @p_detalles      = @detalles13;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
@@ -484,10 +484,10 @@ BEGIN TRY
         @p_id_forma_pago = @id_forma_pago,
         @p_total         = -3500.00,
         @p_detalles      = @detalles14;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
@@ -506,10 +506,10 @@ BEGIN TRY
         @p_id_forma_pago = @id_forma_pago,
         @p_total         = 3500.00,
         @p_detalles      = @detalles15;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
@@ -528,10 +528,10 @@ BEGIN TRY
         @p_id_forma_pago = @id_forma_pago,
         @p_total         = 3500.00,
         @p_detalles      = @detalles16;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
@@ -550,15 +550,15 @@ BEGIN TRY
         @p_id_forma_pago = @id_forma_pago,
         @p_total         = 3500.00,
         @p_detalles      = @detalles17;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
 PRINT '';
-PRINT '--- TEST LN-18: Atracción/tour inexistente en detalle ---';
+PRINT '--- TEST LN-18: Atracciï¿½n/tour inexistente en detalle ---';
 -- ---------------------------------------------------------------
 DECLARE @detalles18 ventas.tt_DetalleVenta;
 INSERT INTO @detalles18 (id_parque, id_historial_precio, id_tipo_visitante, id_atraccion_tour, fecha_acceso, cantidad, precio_unitario, subtotal)
@@ -572,10 +572,10 @@ BEGIN TRY
         @p_id_forma_pago = @id_forma_pago,
         @p_total         = 2000.00,
         @p_detalles      = @detalles18;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
@@ -594,15 +594,15 @@ BEGIN TRY
         @p_id_forma_pago = @id_forma_pago,
         @p_total         = 5000.00,  -- Declaramos 5000, pero subtotal es 7000
         @p_detalles      = @detalles19;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
 PRINT '';
-PRINT '--- TEST LN-20: Múltiples errores simultáneos (acumula mensajes) ---';
+PRINT '--- TEST LN-20: Mï¿½ltiples errores simultï¿½neos (acumula mensajes) ---';
 -- ---------------------------------------------------------------
 DECLARE @detalles20 ventas.tt_DetalleVenta;
 -- Detalle con parque inexistente, sin historial_precio ni atraccion_tour, cantidad 0
@@ -611,22 +611,22 @@ VALUES (999999, NULL, NULL, NULL, '2026-06-15', 0, -10.00, -10.00);
 
 BEGIN TRY
     EXEC ventas.sp_RegistrarVenta
-        @p_punto_venta   = 'XXXX',   -- punto de venta inválido
-        @p_numero        = '',        -- número vacío
+        @p_punto_venta   = 'XXXX',   -- punto de venta invï¿½lido
+        @p_numero        = '',        -- nï¿½mero vacï¿½o
         @p_fecha_venta   = NULL,      -- fecha NULL
         @p_id_forma_pago = 999999,    -- forma de pago inexistente
         @p_total         = -1.00,     -- total negativo
         @p_detalles      = @detalles20;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Errores acumulados esperados:';
+    PRINT 'OK ï¿½ Errores acumulados esperados:';
     PRINT ERROR_MESSAGE();
 END CATCH;
 
 PRINT '';
 PRINT '==============================================================';
-PRINT ' SECCIÓN 3 — EVIDENCIA FINAL Y LIMPIEZA';
+PRINT ' SECCIï¿½N 3 ï¿½ EVIDENCIA FINAL Y LIMPIEZA';
 PRINT '==============================================================';
 
 -- Resumen de tickets generados exitosamente
@@ -647,15 +647,15 @@ DELETE FROM ventas.TipoVisitante WHERE descripcion IN ('Adulto LN-TEST', 'Jubila
 DELETE FROM ventas.FormaPago WHERE descripcion = 'Efectivo LN-TEST';
 DELETE FROM turismo.TipoAtraccion WHERE descripcion = 'Senderismo LN-TEST';
 
-PRINT 'OK — Datos de testing eliminados.';
+PRINT 'OK ï¿½ Datos de testing eliminados.';
 
 -- Verificar limpieza
-SELECT CASE WHEN COUNT(*) = 0 THEN 'OK — Sin tickets LN-TEST residuales'
-            ELSE 'ATENCIÓN — Quedan ' + CAST(COUNT(*) AS VARCHAR) + ' tickets' END AS resultado
+SELECT CASE WHEN COUNT(*) = 0 THEN 'OK - Sin tickets LN-TEST residuales'
+            ELSE 'ATENCIÃ“N - Quedan ' + CAST(COUNT(*) AS VARCHAR) + ' tickets' END AS resultado
 FROM ventas.Ticket WHERE numero LIKE 'LN-%';
 
-SELECT CASE WHEN COUNT(*) = 0 THEN 'OK — Sin parques LN-TEST residuales'
-            ELSE 'ATENCIÓN — Quedan ' + CAST(COUNT(*) AS VARCHAR) + ' parques' END AS resultado
+SELECT CASE WHEN COUNT(*) = 0 THEN 'OK - Sin parques LN-TEST residuales'
+            ELSE 'ATENCIÃ“N - Quedan ' + CAST(COUNT(*) AS VARCHAR) + ' parques' END AS resultado
 FROM parques.Parque WHERE codigo_oficial LIKE 'PN-LN-TEST%';
 
 PRINT '';
@@ -665,42 +665,42 @@ PRINT '==============================================================';
 
 PRINT '';
 PRINT '==============================================================';
-PRINT ' SECCIÓN 3 — comercial.sp_RegistrarConcesionConObligaciones:';
+PRINT ' SECCIï¿½N 3 ï¿½ comercial.sp_RegistrarConcesionConObligaciones:';
 PRINT '              CASOS EXITOSOS';
 PRINT '==============================================================';
 
 -- ---------------------------------------------------------------
 PRINT '';
-PRINT '--- TEST LN-21: Concesión 6 meses con día vencimiento default (10) ---';
+PRINT '--- TEST LN-21: Concesiï¿½n 6 meses con dï¿½a vencimiento default (10) ---';
 -- ---------------------------------------------------------------
 BEGIN TRY
     EXEC comercial.sp_RegistrarConcesionConObligaciones
         @p_id_parque       = @id_parque,
         @p_id_empresa      = @id_empresa,
-        @p_tipo_actividad  = 'Gastronomía LN-TEST',
+        @p_tipo_actividad  = 'Gastronomï¿½a LN-TEST',
         @p_fecha_inicio    = '2026-01-01',
         @p_fecha_fin       = '2026-06-30',
         @p_canon_mensual   = 50000.00;
-    PRINT 'OK — Concesión registrada (6 meses, venc. día 10). Debe generar 6 obligaciones.';
+    PRINT 'OK ï¿½ Concesiï¿½n registrada (6 meses, venc. dï¿½a 10). Debe generar 6 obligaciones.';
 END TRY
 BEGIN CATCH
-    PRINT 'FALLO — ' + ERROR_MESSAGE();
+    PRINT 'FALLO ï¿½ ' + ERROR_MESSAGE();
 END CATCH;
 
 -- Evidencia
-SELECT 'Concesión LN-21' AS test, c.id_concesion, c.tipo_actividad, c.fecha_inicio, c.fecha_fin, c.canon_mensual
+SELECT 'Concesiï¿½n LN-21' AS test, c.id_concesion, c.tipo_actividad, c.fecha_inicio, c.fecha_fin, c.canon_mensual
 FROM comercial.Concesion c
-WHERE c.tipo_actividad = 'Gastronomía LN-TEST';
+WHERE c.tipo_actividad = 'Gastronomï¿½a LN-TEST';
 
 SELECT 'Obligaciones LN-21' AS test, oc.id_obligacion, oc.mes, oc.anio, oc.monto_obligado, oc.estado, oc.fecha_vencimiento
 FROM comercial.ObligacionCanon oc
 JOIN comercial.Concesion c ON c.id_concesion = oc.id_concesion
-WHERE c.tipo_actividad = 'Gastronomía LN-TEST'
+WHERE c.tipo_actividad = 'Gastronomï¿½a LN-TEST'
 ORDER BY oc.anio, oc.mes;
 
 -- ---------------------------------------------------------------
 PRINT '';
-PRINT '--- TEST LN-22: Concesión 1 mes (período mínimo) ---';
+PRINT '--- TEST LN-22: Concesiï¿½n 1 mes (perï¿½odo mï¿½nimo) ---';
 -- ---------------------------------------------------------------
 BEGIN TRY
     EXEC comercial.sp_RegistrarConcesionConObligaciones
@@ -711,10 +711,10 @@ BEGIN TRY
         @p_fecha_fin       = '2026-03-31',
         @p_canon_mensual   = 20000.00,
         @p_dia_vencimiento = 15;
-    PRINT 'OK — Concesión registrada (1 mes). Debe generar 1 obligación.';
+    PRINT 'OK ï¿½ Concesiï¿½n registrada (1 mes). Debe generar 1 obligaciï¿½n.';
 END TRY
 BEGIN CATCH
-    PRINT 'FALLO — ' + ERROR_MESSAGE();
+    PRINT 'FALLO ï¿½ ' + ERROR_MESSAGE();
 END CATCH;
 
 -- Evidencia
@@ -725,35 +725,35 @@ WHERE c.tipo_actividad = 'Kiosco LN-TEST';
 
 -- ---------------------------------------------------------------
 PRINT '';
-PRINT '--- TEST LN-23: Concesión 12 meses con día vencimiento personalizado (20) ---';
+PRINT '--- TEST LN-23: Concesiï¿½n 12 meses con dï¿½a vencimiento personalizado (20) ---';
 -- ---------------------------------------------------------------
 BEGIN TRY
     EXEC comercial.sp_RegistrarConcesionConObligaciones
         @p_id_parque       = @id_parque2,
         @p_id_empresa      = @id_empresa,
-        @p_tipo_actividad  = 'Excursiones acuáticas LN-TEST',
+        @p_tipo_actividad  = 'Excursiones acuï¿½ticas LN-TEST',
         @p_fecha_inicio    = '2026-01-01',
         @p_fecha_fin       = '2026-12-31',
         @p_canon_mensual   = 75000.00,
         @p_dia_vencimiento = 20;
-    PRINT 'OK — Concesión registrada (12 meses, venc. día 20). Debe generar 12 obligaciones.';
+    PRINT 'OK ï¿½ Concesiï¿½n registrada (12 meses, venc. dï¿½a 20). Debe generar 12 obligaciones.';
 END TRY
 BEGIN CATCH
-    PRINT 'FALLO — ' + ERROR_MESSAGE();
+    PRINT 'FALLO ï¿½ ' + ERROR_MESSAGE();
 END CATCH;
 
--- Evidencia: verificar que se generaron 12 obligaciones con vencimiento el día 20
+-- Evidencia: verificar que se generaron 12 obligaciones con vencimiento el dï¿½a 20
 SELECT 'Cant. Obligaciones LN-23' AS test,
        COUNT(*) AS total_obligaciones,
        MIN(fecha_vencimiento) AS primer_vencimiento,
        MAX(fecha_vencimiento) AS ultimo_vencimiento
 FROM comercial.ObligacionCanon oc
 JOIN comercial.Concesion c ON c.id_concesion = oc.id_concesion
-WHERE c.tipo_actividad = 'Excursiones acuáticas LN-TEST';
+WHERE c.tipo_actividad = 'Excursiones acuï¿½ticas LN-TEST';
 
 -- ---------------------------------------------------------------
 PRINT '';
-PRINT '--- TEST LN-24: Concesión que cruza fin de año (Nov 2025 - Feb 2026) ---';
+PRINT '--- TEST LN-24: Concesiï¿½n que cruza fin de aï¿½o (Nov 2025 - Feb 2026) ---';
 -- ---------------------------------------------------------------
 BEGIN TRY
     EXEC comercial.sp_RegistrarConcesionConObligaciones
@@ -764,13 +764,13 @@ BEGIN TRY
         @p_fecha_fin       = '2026-02-28',
         @p_canon_mensual   = 30000.00,
         @p_dia_vencimiento = 5;
-    PRINT 'OK — Concesión registrada (cruza fin de año). Debe generar 4 obligaciones (Nov, Dic, Ene, Feb).';
+    PRINT 'OK ï¿½ Concesiï¿½n registrada (cruza fin de aï¿½o). Debe generar 4 obligaciones (Nov, Dic, Ene, Feb).';
 END TRY
 BEGIN CATCH
-    PRINT 'FALLO — ' + ERROR_MESSAGE();
+    PRINT 'FALLO ï¿½ ' + ERROR_MESSAGE();
 END CATCH;
 
--- Evidencia: 4 obligaciones cruzando el año
+-- Evidencia: 4 obligaciones cruzando el aï¿½o
 SELECT 'Obligaciones LN-24' AS test, oc.mes, oc.anio, oc.fecha_vencimiento
 FROM comercial.ObligacionCanon oc
 JOIN comercial.Concesion c ON c.id_concesion = oc.id_concesion
@@ -779,11 +779,11 @@ ORDER BY oc.anio, oc.mes;
 
 PRINT '';
 PRINT '==============================================================';
-PRINT ' SECCIÓN 4 — comercial.sp_RegistrarConcesionConObligaciones:';
+PRINT ' SECCIï¿½N 4 ï¿½ comercial.sp_RegistrarConcesionConObligaciones:';
 PRINT '              CASOS DE ERROR';
 PRINT '==============================================================';
 PRINT 'Cada test espera recibir un error. Si el bloque CATCH no';
-PRINT 'ejecuta, la validación falla.';
+PRINT 'ejecuta, la validaciï¿½n falla.';
 
 -- ---------------------------------------------------------------
 PRINT '';
@@ -797,10 +797,10 @@ BEGIN TRY
         @p_fecha_inicio    = '2026-01-01',
         @p_fecha_fin       = '2026-06-30',
         @p_canon_mensual   = 50000.00;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
@@ -815,15 +815,15 @@ BEGIN TRY
         @p_fecha_inicio    = '2026-01-01',
         @p_fecha_fin       = '2026-06-30',
         @p_canon_mensual   = 50000.00;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
 PRINT '';
-PRINT '--- TEST LN-27: Tipo de actividad vacío ---';
+PRINT '--- TEST LN-27: Tipo de actividad vacï¿½o ---';
 -- ---------------------------------------------------------------
 BEGIN TRY
     EXEC comercial.sp_RegistrarConcesionConObligaciones
@@ -833,10 +833,10 @@ BEGIN TRY
         @p_fecha_inicio    = '2026-01-01',
         @p_fecha_fin       = '2026-06-30',
         @p_canon_mensual   = 50000.00;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
@@ -851,10 +851,10 @@ BEGIN TRY
         @p_fecha_inicio    = NULL,
         @p_fecha_fin       = NULL,
         @p_canon_mensual   = 50000.00;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
@@ -869,10 +869,10 @@ BEGIN TRY
         @p_fecha_inicio    = '2026-06-01',
         @p_fecha_fin       = '2026-01-01',
         @p_canon_mensual   = 50000.00;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
@@ -887,10 +887,10 @@ BEGIN TRY
         @p_fecha_inicio    = '2026-01-01',
         @p_fecha_fin       = '2026-06-30',
         @p_canon_mensual   = -5000.00;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
@@ -905,15 +905,15 @@ BEGIN TRY
         @p_fecha_inicio    = '2026-01-01',
         @p_fecha_fin       = '2026-06-30',
         @p_canon_mensual   = 0.00;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
 PRINT '';
-PRINT '--- TEST LN-32: Día de vencimiento fuera de rango (0) ---';
+PRINT '--- TEST LN-32: Dï¿½a de vencimiento fuera de rango (0) ---';
 -- ---------------------------------------------------------------
 BEGIN TRY
     EXEC comercial.sp_RegistrarConcesionConObligaciones
@@ -924,15 +924,15 @@ BEGIN TRY
         @p_fecha_fin       = '2026-06-30',
         @p_canon_mensual   = 50000.00,
         @p_dia_vencimiento = 0;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
 PRINT '';
-PRINT '--- TEST LN-33: Día de vencimiento fuera de rango (29) ---';
+PRINT '--- TEST LN-33: Dï¿½a de vencimiento fuera de rango (29) ---';
 -- ---------------------------------------------------------------
 BEGIN TRY
     EXEC comercial.sp_RegistrarConcesionConObligaciones
@@ -943,35 +943,35 @@ BEGIN TRY
         @p_fecha_fin       = '2026-06-30',
         @p_canon_mensual   = 50000.00,
         @p_dia_vencimiento = 29;
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK ï¿½ Error esperado: ' + ERROR_MESSAGE();
 END CATCH;
 
 -- ---------------------------------------------------------------
 PRINT '';
-PRINT '--- TEST LN-34: Múltiples errores simultáneos (acumula mensajes) ---';
+PRINT '--- TEST LN-34: Mï¿½ltiples errores simultï¿½neos (acumula mensajes) ---';
 -- ---------------------------------------------------------------
 BEGIN TRY
     EXEC comercial.sp_RegistrarConcesionConObligaciones
         @p_id_parque       = 999999,    -- parque inexistente
         @p_id_empresa      = 999999,    -- empresa inexistente
-        @p_tipo_actividad  = '',        -- vacío
+        @p_tipo_actividad  = '',        -- vacï¿½o
         @p_fecha_inicio    = '2026-06-01',
         @p_fecha_fin       = '2026-01-01',  -- fin < inicio
         @p_canon_mensual   = -100.00,   -- negativo
         @p_dia_vencimiento = 30;        -- fuera de rango
-    PRINT 'FALLO: debería haber generado error.';
+    PRINT 'FALLO: deberï¿½a haber generado error.';
 END TRY
 BEGIN CATCH
-    PRINT 'OK — Errores acumulados esperados:';
+    PRINT 'OK ï¿½ Errores acumulados esperados:';
     PRINT ERROR_MESSAGE();
 END CATCH;
 
 PRINT '';
 PRINT '==============================================================';
-PRINT ' SECCIÓN 5 — EVIDENCIA FINAL Y LIMPIEZA';
+PRINT ' SECCIï¿½N 5 ï¿½ EVIDENCIA FINAL Y LIMPIEZA';
 PRINT '==============================================================';
 
 -- Resumen de tickets generados exitosamente
@@ -1002,24 +1002,24 @@ DELETE FROM ventas.TipoVisitante WHERE descripcion IN ('Adulto LN-TEST', 'Jubila
 DELETE FROM ventas.FormaPago WHERE descripcion = 'Efectivo LN-TEST';
 DELETE FROM turismo.TipoAtraccion WHERE descripcion = 'Senderismo LN-TEST';
 
-PRINT 'OK — Datos de testing eliminados.';
+PRINT 'Los Datos de testing han sido eliminados';
 
 -- Verificar limpieza
-SELECT CASE WHEN COUNT(*) = 0 THEN 'OK — Sin tickets LN-TEST residuales'
-            ELSE 'ATENCIÓN — Quedan ' + CAST(COUNT(*) AS VARCHAR) + ' tickets' END AS resultado
+SELECT CASE WHEN COUNT(*) = 0 THEN 'OK - Sin tickets LN-TEST residuales'
+            ELSE 'ATENCIÃ“N - Quedan ' + CAST(COUNT(*) AS VARCHAR) + ' tickets' END AS resultado
 FROM ventas.Ticket WHERE numero LIKE 'LN-%';
 
-SELECT CASE WHEN COUNT(*) = 0 THEN 'OK — Sin concesiones LN-TEST residuales'
-            ELSE 'ATENCIÓN — Quedan ' + CAST(COUNT(*) AS VARCHAR) + ' concesiones' END AS resultado
+SELECT CASE WHEN COUNT(*) = 0 THEN 'OK - Sin concesiones LN-TEST residuales'
+            ELSE 'ATENCIÃ“N - Quedan ' + CAST(COUNT(*) AS VARCHAR) + ' concesiones' END AS resultado
 FROM comercial.Concesion WHERE tipo_actividad LIKE '%LN-TEST';
 
-SELECT CASE WHEN COUNT(*) = 0 THEN 'OK — Sin parques LN-TEST residuales'
-            ELSE 'ATENCIÓN — Quedan ' + CAST(COUNT(*) AS VARCHAR) + ' parques' END AS resultado
+SELECT CASE WHEN COUNT(*) = 0 THEN 'OK - Sin parques LN-TEST residuales'
+            ELSE 'ATENCIÃ“N - Quedan ' + CAST(COUNT(*) AS VARCHAR) + ' parques' END AS resultado
 FROM parques.Parque WHERE codigo_oficial LIKE 'PN-LN-TEST%';
 
 GO
 
 PRINT '';
 PRINT '==============================================================';
-PRINT ' Testing Lógica de Negocio completado.';
+PRINT ' Testing LÃ³gica de Negocio completado.';
 PRINT '==============================================================';
