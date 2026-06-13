@@ -38,7 +38,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM parques.TipoParque WHERE descripcion = @p_descripcion)
         SET @errores += N'- Ya existe un tipo de parque con esa descripción.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     INSERT INTO parques.TipoParque (descripcion) VALUES (@p_descripcion);
 END
@@ -65,7 +65,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM parques.TipoParque WHERE descripcion = @p_descripcion AND id_tipo_parque != @p_id_tipo_parque)
         SET @errores += N'- Ya existe otro tipo de parque con esa descripción.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     UPDATE parques.TipoParque SET descripcion = @p_descripcion WHERE id_tipo_parque = @p_id_tipo_parque;
 END
@@ -89,7 +89,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM parques.Parque WHERE id_tipo_parque = @p_id_tipo_parque)
         SET @errores += N'- No se puede eliminar: existen parques asociados a este tipo.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     DELETE FROM parques.TipoParque WHERE id_tipo_parque = @p_id_tipo_parque;
 END
@@ -117,7 +117,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM ventas.TipoVisitante WHERE descripcion = @p_descripcion)
         SET @errores += N'- Ya existe un tipo de visitante con esa descripción.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     INSERT INTO ventas.TipoVisitante (descripcion) VALUES (@p_descripcion);
 END
@@ -144,7 +144,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM ventas.TipoVisitante WHERE descripcion = @p_descripcion AND id_tipo_visitante != @p_id_tipo_visitante)
         SET @errores += N'- Ya existe otro tipo de visitante con esa descripción.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     UPDATE ventas.TipoVisitante SET descripcion = @p_descripcion WHERE id_tipo_visitante = @p_id_tipo_visitante;
 END
@@ -170,7 +170,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM ventas.TicketDetalle WHERE id_tipo_visitante = @p_id_tipo_visitante)
         SET @errores += N'- No se puede eliminar: existen detalles de ticket asociados a este tipo.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     DELETE FROM ventas.TipoVisitante WHERE id_tipo_visitante = @p_id_tipo_visitante;
 END
@@ -198,7 +198,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM ventas.FormaPago WHERE descripcion = @p_descripcion)
         SET @errores += N'- Ya existe una forma de pago con esa descripción.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     INSERT INTO ventas.FormaPago (descripcion) VALUES (@p_descripcion);
 END
@@ -223,7 +223,7 @@ BEGIN
     IF LTRIM(RTRIM(ISNULL(@p_descripcion, ''))) = ''
         SET @errores += N'- La descripción es obligatoria.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     UPDATE ventas.FormaPago SET descripcion = @p_descripcion WHERE id_forma_pago = @p_id_forma_pago;
 END
@@ -247,7 +247,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM ventas.Ticket WHERE id_forma_pago = @p_id_forma_pago)
         SET @errores += N'- No se puede eliminar: existen tickets asociados a esta forma de pago.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     DELETE FROM ventas.FormaPago WHERE id_forma_pago = @p_id_forma_pago;
 END
@@ -275,7 +275,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM turismo.TipoAtraccion WHERE descripcion = @p_descripcion)
         SET @errores += N'- Ya existe un tipo de atracción con esa descripción.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     INSERT INTO turismo.TipoAtraccion (descripcion) VALUES (@p_descripcion);
 END
@@ -300,7 +300,7 @@ BEGIN
     IF LTRIM(RTRIM(ISNULL(@p_descripcion, ''))) = ''
         SET @errores += N'- La descripción es obligatoria.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     UPDATE turismo.TipoAtraccion SET descripcion = @p_descripcion WHERE id_tipo_atraccion = @p_id_tipo_atraccion;
 END
@@ -324,7 +324,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM turismo.AtraccionTour WHERE id_tipo_atraccion = @p_id_tipo_atraccion)
         SET @errores += N'- No se puede eliminar: existen atracciones/tours asociados a este tipo.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     DELETE FROM turismo.TipoAtraccion WHERE id_tipo_atraccion = @p_id_tipo_atraccion;
 END
@@ -363,7 +363,7 @@ BEGIN
     IF @p_email IS NOT NULL AND @p_email NOT LIKE '%@%.%'
         SET @errores += N'- El formato del email no es válido.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     INSERT INTO personal.Guardaparque (nombre, apellido, dni, email, telefono, activo)
     VALUES (@p_nombre, @p_apellido, @p_dni, @p_email, @p_telefono, 1);
@@ -401,7 +401,7 @@ BEGIN
     IF @p_email IS NOT NULL AND @p_email NOT LIKE '%@%.%'
         SET @errores += N'- El formato del email no es válido.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     UPDATE personal.Guardaparque
     SET nombre = @p_nombre, apellido = @p_apellido, dni = @p_dni,
@@ -428,7 +428,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM personal.Guardaparque WHERE id_guardaparque = @p_id_guardaparque AND activo = 0)
         SET @errores += N'- El guardaparque ya se encuentra inactivo.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     UPDATE personal.Guardaparque SET activo = 0 WHERE id_guardaparque = @p_id_guardaparque;
 END
@@ -466,7 +466,7 @@ BEGIN
     IF @p_vigencia_autorizacion IS NULL
         SET @errores += N'- La vigencia de autorización es obligatoria.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     INSERT INTO turismo.Guia (nombre, apellido, dni, especialidad, vigencia_autorizacion)
     VALUES (@p_nombre, @p_apellido, @p_dni, @p_especialidad, @p_vigencia_autorizacion);
@@ -502,7 +502,7 @@ BEGIN
     IF @p_vigencia_autorizacion IS NULL
         SET @errores += N'- La vigencia de autorización es obligatoria.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     UPDATE turismo.Guia
     SET nombre = @p_nombre, apellido = @p_apellido, dni = @p_dni,
@@ -531,7 +531,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM turismo.TourGuia WHERE id_guia = @p_id_guia)
         SET @errores += N'- No se puede eliminar: el guía está asignado a uno o más tours.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     DELETE FROM turismo.Guia WHERE id_guia = @p_id_guia;
 END
@@ -571,7 +571,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM parques.TipoParque WHERE id_tipo_parque = @p_id_tipo_parque)
         SET @errores += N'- El tipo de parque indicado no existe.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     INSERT INTO parques.Parque (codigo_oficial, nombre, ubicacion, superficie, id_tipo_parque)
     VALUES (@p_codigo_oficial, @p_nombre, @p_ubicacion, @p_superficie, @p_id_tipo_parque);
@@ -609,7 +609,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM parques.TipoParque WHERE id_tipo_parque = @p_id_tipo_parque)
         SET @errores += N'- El tipo de parque indicado no existe.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     UPDATE parques.Parque
     SET codigo_oficial = @p_codigo_oficial, nombre = @p_nombre, ubicacion = @p_ubicacion,
@@ -642,7 +642,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM ventas.HistorialPrecio WHERE id_parque = @p_id_parque)
         SET @errores += N'- No se puede eliminar: el parque tiene historial de precios registrado.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     DELETE FROM parques.Parque WHERE id_parque = @p_id_parque;
 END
@@ -680,7 +680,7 @@ BEGIN
     IF @p_email IS NOT NULL AND @p_email NOT LIKE '%@%.%'
         SET @errores += N'- El formato del email no es válido.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     INSERT INTO comercial.Empresa (cuit, razon_social, telefono, email, direccion)
     VALUES (@p_cuit, @p_razon_social, @p_telefono, @p_email, @p_direccion);
@@ -716,7 +716,7 @@ BEGIN
     IF @p_email IS NOT NULL AND @p_email NOT LIKE '%@%.%'
         SET @errores += N'- El formato del email no es válido.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     UPDATE comercial.Empresa
     SET cuit = @p_cuit, razon_social = @p_razon_social, telefono = @p_telefono,
@@ -743,7 +743,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM comercial.Concesion WHERE id_empresa = @p_id_empresa)
         SET @errores += N'- No se puede eliminar: la empresa tiene concesiones registradas.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     DELETE FROM comercial.Empresa WHERE id_empresa = @p_id_empresa;
 END
@@ -786,7 +786,7 @@ BEGIN
     )
         SET @errores += N'- El guardaparque ya tiene un período activo sin fecha de egreso. Ciérrelo antes de iniciar uno nuevo.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     INSERT INTO personal.HistorialGuardaparque (id_guardaparque, id_parque, fecha_ingreso, fecha_egreso, motivo_egreso)
     VALUES (@p_id_guardaparque, @p_id_parque, @p_fecha_ingreso, @p_fecha_egreso, @p_motivo_egreso);
@@ -820,7 +820,7 @@ BEGIN
     IF @p_fecha_egreso IS NULL AND @p_motivo_egreso IS NOT NULL
         SET @errores += N'- No se puede registrar motivo de egreso sin una fecha de egreso.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     UPDATE personal.HistorialGuardaparque
     SET fecha_egreso = @p_fecha_egreso, motivo_egreso = @p_motivo_egreso
@@ -844,7 +844,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM personal.HistorialGuardaparque WHERE id_historial = @p_id_historial)
         SET @errores += N'- No existe un historial con el ID indicado.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     DELETE FROM personal.HistorialGuardaparque WHERE id_historial = @p_id_historial;
 END
@@ -879,7 +879,7 @@ BEGIN
     IF @p_fecha_autorizacion IS NULL
         SET @errores += N'- La fecha de autorización es obligatoria.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     INSERT INTO turismo.GuiaParque (id_guia, id_parque, fecha_autorizacion, estado_autorizacion)
     VALUES (@p_id_guia, @p_id_parque, @p_fecha_autorizacion, @p_estado_autorizacion);
@@ -907,7 +907,7 @@ BEGIN
     IF @p_fecha_autorizacion IS NULL
         SET @errores += N'- La fecha de autorización es obligatoria.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     UPDATE turismo.GuiaParque
     SET fecha_autorizacion = @p_fecha_autorizacion, estado_autorizacion = @p_estado_autorizacion
@@ -932,7 +932,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM turismo.GuiaParque WHERE id_guia = @p_id_guia AND id_parque = @p_id_parque)
         SET @errores += N'- No existe una habilitación para el guía y parque indicados.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     DELETE FROM turismo.GuiaParque WHERE id_guia = @p_id_guia AND id_parque = @p_id_parque;
 END
@@ -973,7 +973,7 @@ BEGIN
     IF ISNULL(@p_duracion, 0) <= 0
         SET @errores += N'- La duración debe ser mayor a cero.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     INSERT INTO turismo.AtraccionTour (id_parque, id_tipo_atraccion, nombre, costo, cupo_maximo, duracion)
     VALUES (@p_id_parque, @p_id_tipo_atraccion, @p_nombre, @p_costo, @p_cupo_maximo, @p_duracion);
@@ -1011,7 +1011,7 @@ BEGIN
     IF ISNULL(@p_duracion, 0) <= 0
         SET @errores += N'- La duración debe ser mayor a cero.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     UPDATE turismo.AtraccionTour
     SET id_tipo_atraccion = @p_id_tipo_atraccion, nombre = @p_nombre, costo = @p_costo,
@@ -1040,7 +1040,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM turismo.TourGuia WHERE id_atraccion_tour = @p_id_atraccion_tour)
         SET @errores += N'- No se puede eliminar: la atracción/tour tiene guías asignados.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     DELETE FROM turismo.AtraccionTour WHERE id_atraccion_tour = @p_id_atraccion_tour;
 END
@@ -1081,7 +1081,7 @@ BEGIN
     )
         SET @errores += N'- El guía no tiene habilitación activa en el parque al que pertenece el tour.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     INSERT INTO turismo.TourGuia (id_atraccion_tour, id_guia)
     VALUES (@p_id_atraccion_tour, @p_id_guia);
@@ -1105,7 +1105,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM turismo.TourGuia WHERE id_atraccion_tour = @p_id_atraccion_tour AND id_guia = @p_id_guia)
         SET @errores += N'- No existe la asignación entre el guía y la atracción/tour indicados.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     DELETE FROM turismo.TourGuia WHERE id_atraccion_tour = @p_id_atraccion_tour AND id_guia = @p_id_guia;
 END
@@ -1140,7 +1140,7 @@ BEGIN
     IF @p_fecha_desde IS NULL
         SET @errores += N'- La fecha de vigencia es obligatoria.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     INSERT INTO ventas.HistorialPrecio (precio, fecha_desde, id_parque, id_tipo_visitante)
     VALUES (@p_precio, @p_fecha_desde, @p_id_parque, @p_id_tipo_visitante);
@@ -1169,7 +1169,7 @@ BEGIN
     IF @p_fecha_desde IS NULL
         SET @errores += N'- La fecha de vigencia es obligatoria.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     UPDATE ventas.HistorialPrecio
     SET precio = @p_precio, fecha_desde = @p_fecha_desde
@@ -1195,7 +1195,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM ventas.TicketDetalle WHERE id_historial_precio = @p_id_historial_precio)
         SET @errores += N'- No se puede eliminar: el precio está referenciado en detalles de tickets.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     DELETE FROM ventas.HistorialPrecio WHERE id_historial_precio = @p_id_historial_precio;
 END
@@ -1236,7 +1236,7 @@ BEGIN
     IF ISNULL(@p_canon_mensual, 0) <= 0
         SET @errores += N'- El canon mensual debe ser mayor a cero.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     INSERT INTO comercial.Concesion (id_parque, id_empresa, tipo_actividad, fecha_inicio, fecha_fin, canon_mensual)
     VALUES (@p_id_parque, @p_id_empresa, @p_tipo_actividad, @p_fecha_inicio, @p_fecha_fin, @p_canon_mensual);
@@ -1269,7 +1269,7 @@ BEGIN
     IF ISNULL(@p_canon_mensual, 0) <= 0
         SET @errores += N'- El canon mensual debe ser mayor a cero.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     UPDATE comercial.Concesion
     SET tipo_actividad = @p_tipo_actividad, fecha_inicio = @p_fecha_inicio,
@@ -1296,7 +1296,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM comercial.ObligacionCanon WHERE id_concesion = @p_id_concesion)
         SET @errores += N'- No se puede eliminar: la concesión tiene obligaciones de canon registradas.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     DELETE FROM comercial.Concesion WHERE id_concesion = @p_id_concesion;
 END
@@ -1339,7 +1339,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM comercial.ObligacionCanon WHERE id_concesion = @p_id_concesion AND anio = @p_anio AND mes = @p_mes)
         SET @errores += N'- Ya existe una obligación para esa concesión en el período indicado.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     INSERT INTO comercial.ObligacionCanon (id_concesion, mes, anio, monto_obligado, estado, fecha_vencimiento)
     VALUES (@p_id_concesion, @p_mes, @p_anio, @p_monto_obligado, @p_estado, @p_fecha_vencimiento);
@@ -1371,7 +1371,7 @@ BEGIN
     IF @p_fecha_vencimiento IS NULL
         SET @errores += N'- La fecha de vencimiento es obligatoria.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     UPDATE comercial.ObligacionCanon
     SET monto_obligado = @p_monto_obligado, estado = @p_estado, fecha_vencimiento = @p_fecha_vencimiento
@@ -1397,7 +1397,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM comercial.PagoCanon WHERE id_obligacion = @p_id_obligacion)
         SET @errores += N'- No se puede eliminar: la obligación tiene pagos registrados.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     DELETE FROM comercial.ObligacionCanon WHERE id_obligacion = @p_id_obligacion;
 END
@@ -1431,7 +1431,7 @@ BEGIN
     IF ISNULL(@p_monto_pagado, 0) <= 0
         SET @errores += N'- El monto pagado debe ser mayor a cero.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     INSERT INTO comercial.PagoCanon (id_obligacion, fecha_pago, monto_pagado)
     VALUES (@p_id_obligacion, @p_fecha_pago, @p_monto_pagado);
@@ -1454,7 +1454,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM comercial.PagoCanon WHERE id_pago = @p_id_pago)
         SET @errores += N'- No existe un pago con el ID indicado.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     DELETE FROM comercial.PagoCanon WHERE id_pago = @p_id_pago;
 END
@@ -1492,7 +1492,7 @@ BEGIN
     IF ISNULL(@p_total, -1) < 0
         SET @errores += N'- El total no puede ser negativo.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     INSERT INTO ventas.Ticket (punto_venta, numero, fecha_venta, id_forma_pago, total)
     VALUES (@p_punto_venta, @p_numero, @p_fecha_venta, @p_id_forma_pago, @p_total);
@@ -1521,7 +1521,7 @@ BEGIN
     IF ISNULL(@p_total, -1) < 0
         SET @errores += N'- El total no puede ser negativo.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     UPDATE ventas.Ticket
     SET id_forma_pago = @p_id_forma_pago, total = @p_total
@@ -1547,7 +1547,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM ventas.TicketDetalle WHERE id_ticket = @p_id_ticket)
         SET @errores += N'- No se puede eliminar: el ticket tiene líneas de detalle asociadas.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     DELETE FROM ventas.Ticket WHERE id_ticket = @p_id_ticket;
 END
@@ -1599,7 +1599,7 @@ BEGIN
     IF ISNULL(@p_subtotal, -1) < 0
         SET @errores += N'- El subtotal no puede ser un monto negativo.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     INSERT INTO ventas.TicketDetalle
         (id_ticket, id_parque, id_historial_precio, id_tipo_visitante, id_atraccion_tour,
@@ -1635,7 +1635,7 @@ BEGIN
     IF ISNULL(@p_subtotal, -1) < 0
         SET @errores += N'- El subtotal no puede ser un monto negativo.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     UPDATE ventas.TicketDetalle
     SET cantidad = @p_cantidad, precio_unitario = @p_precio_unitario, subtotal = @p_subtotal
@@ -1659,7 +1659,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM ventas.TicketDetalle WHERE id_detalle = @p_id_detalle)
         SET @errores += N'- No existe un detalle de ticket con el ID indicado.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     DELETE FROM ventas.TicketDetalle WHERE id_detalle = @p_id_detalle;
 END

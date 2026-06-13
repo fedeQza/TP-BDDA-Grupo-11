@@ -145,7 +145,7 @@ BEGIN
             + N') no coincide con la suma de subtotales ('
             + CAST(ISNULL(@total_calculado, 0) AS VARCHAR(20)) + N').' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     BEGIN TRANSACTION;
     BEGIN TRY
@@ -168,8 +168,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         IF XACT_STATE() != 0 ROLLBACK TRANSACTION;
-        DECLARE @err1 NVARCHAR(MAX) = ERROR_MESSAGE();
-        RAISERROR(@err1, 16, 1);
+        THROW;
     END CATCH;
 END
 
@@ -224,7 +223,7 @@ BEGIN
     IF ISNULL(@p_dia_vencimiento, 0) NOT BETWEEN 1 AND 28
         SET @errores += N'- El día de vencimiento debe estar entre 1 y 28.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     BEGIN TRANSACTION;
     BEGIN TRY
@@ -266,8 +265,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         IF XACT_STATE() != 0 ROLLBACK TRANSACTION;
-        DECLARE @err2 NVARCHAR(MAX) = ERROR_MESSAGE();
-        RAISERROR(@err2, 16, 1);
+        THROW;
     END CATCH;
 END
 
@@ -315,7 +313,7 @@ BEGIN
     IF ISNULL(@p_monto_pagado, 0) <= 0
         SET @errores += N'- El monto pagado debe ser mayor a cero.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     SELECT @total_pagado_prev = ISNULL(SUM(monto_pagado), 0)
     FROM comercial.PagoCanon
@@ -341,8 +339,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         IF XACT_STATE() != 0 ROLLBACK TRANSACTION;
-        DECLARE @err3 NVARCHAR(MAX) = ERROR_MESSAGE();
-        RAISERROR(@err3, 16, 1);
+        THROW;
     END CATCH;
 END
 
@@ -398,7 +395,7 @@ BEGIN
        AND @p_fecha_transferencia < @fecha_ingreso_actual
         SET @errores += N'- La fecha de transferencia no puede ser anterior a la fecha de ingreso al parque actual.' + CHAR(13);
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     BEGIN TRANSACTION;
     BEGIN TRY
@@ -418,8 +415,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         IF XACT_STATE() != 0 ROLLBACK TRANSACTION;
-        DECLARE @err4 NVARCHAR(MAX) = ERROR_MESSAGE();
-        RAISERROR(@err4, 16, 1);
+        THROW;
     END CATCH;
 END
 
@@ -472,7 +468,7 @@ BEGIN
                 + CONVERT(VARCHAR(10), @ultima_fecha, 103) + N').' + CHAR(13);
     END
 
-    IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
+    IF @errores != N'' THROW 50000, @errores, 1;
 
     INSERT INTO ventas.HistorialPrecio
         (precio, fecha_desde, id_parque, id_tipo_visitante)
