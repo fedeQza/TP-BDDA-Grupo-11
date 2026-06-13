@@ -21,9 +21,9 @@ Descripción: Stored Procedures de lógica de negocio.
                 período contractual.
 
              3. comercial.PagoCanonRegistrar
-                Registra un pago de canon y actualiza el estado
-                de la obligación (PARCIAL / PAGADO) en la misma
-                transacción.
+                Registra un pago de canon que cubre el total de
+                la obligación y la marca como PAGADO en la misma
+                transacción. No admite pagos parciales.
 
              4. personal.GuardaparqueTransferir
                 Cierra el período activo de un guardaparque en
@@ -273,10 +273,9 @@ GO
 
 -- ==============================================================
 -- 3. comercial.PagoCanonRegistrar
---    Inserta PagoCanon y actualiza el estado de la
---    ObligacionCanon según el total acumulado:
---      PARCIAL  → pagos parciales (suma < monto_obligado)
---      PAGADO   → obligación saldada (suma >= monto_obligado)
+--    Inserta PagoCanon y marca la ObligacionCanon como PAGADO.
+--    No se permiten pagos parciales: el monto pagado debe
+--    cubrir exactamente el saldo pendiente de la obligación.
 --    Retorna el estado resultante y el total acumulado.
 -- ==============================================================
 
@@ -304,6 +303,10 @@ BEGIN
     FROM comercial.ObligacionCanon
     WHERE id_obligacion = @p_id_obligacion;
 
+    SELECT @total_pagado_prev = ISNULL(SUM(monto_pagado), 0)
+    FROM comercial.PagoCanon
+    WHERE id_obligacion = @p_id_obligacion;
+
     IF @monto_oblig IS NULL
         SET @errores += N'- La obligación indicada no existe.' + CHAR(13);
     IF EXISTS (SELECT 1 FROM comercial.ObligacionCanon WHERE id_obligacion = @p_id_obligacion AND estado = 'PAGADO')
@@ -312,15 +315,13 @@ BEGIN
         SET @errores += N'- La fecha de pago es obligatoria.' + CHAR(13);
     IF ISNULL(@p_monto_pagado, 0) <= 0
         SET @errores += N'- El monto pagado debe ser mayor a cero.' + CHAR(13);
+    IF @monto_oblig IS NOT NULL AND ISNULL(@p_monto_pagado, 0) != (@monto_oblig - @total_pagado_prev)
+        SET @errores += N'- El monto pagado no cubre el total de la obligación. No se permiten pagos parciales.' + CHAR(13);
 
     IF @errores != N'' THROW 50000, @errores, 1;
 
-    SELECT @total_pagado_prev = ISNULL(SUM(monto_pagado), 0)
-    FROM comercial.PagoCanon
-    WHERE id_obligacion = @p_id_obligacion;
-
-    SET @total_pagado = @total_pagado_prev + @p_monto_pagado;
-    SET @nuevo_estado = CASE WHEN @total_pagado >= @monto_oblig THEN 'PAGADO' ELSE 'PARCIAL' END;
+    SET @total_pagado = @monto_oblig;
+    SET @nuevo_estado = 'PAGADO';
 
     BEGIN TRANSACTION;
     BEGIN TRY
