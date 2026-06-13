@@ -20,7 +20,13 @@ GO
 -- SCHEMA: parques  |  TABLA: TipoParque
 -- ==============================================================
 
-CREATE PROCEDURE parques.sp_InsertarTipoParque
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('parques.TipoParqueInsertar') AND type = 'P')
+    PRINT 'Creando Procedure parques.TipoParqueInsertar...';
+ELSE
+    PRINT 'OK - Procedure parques.TipoParqueInsertar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE parques.TipoParqueInsertar
     @p_descripcion VARCHAR(50)
 AS
 BEGIN
@@ -38,7 +44,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE parques.sp_ModificarTipoParque
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('parques.TipoParqueModificar') AND type = 'P')
+    PRINT 'Creando Procedure parques.TipoParqueModificar...';
+ELSE
+    PRINT 'OK - Procedure parques.TipoParqueModificar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE parques.TipoParqueModificar
     @p_id_tipo_parque INT,
     @p_descripcion    VARCHAR(50)
 AS
@@ -59,7 +71,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE parques.sp_EliminarTipoParque
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('parques.TipoParqueEliminar') AND type = 'P')
+    PRINT 'Creando Procedure parques.TipoParqueEliminar...';
+ELSE
+    PRINT 'OK - Procedure parques.TipoParqueEliminar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE parques.TipoParqueEliminar
     @p_id_tipo_parque INT
 AS
 BEGIN
@@ -81,7 +99,13 @@ GO
 -- SCHEMA: ventas  |  TABLA: TipoVisitante
 -- ==============================================================
 
-CREATE PROCEDURE ventas.sp_InsertarTipoVisitante
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('ventas.TipoVisitanteInsertar') AND type = 'P')
+    PRINT 'Creando Procedure ventas.TipoVisitanteInsertar...';
+ELSE
+    PRINT 'OK - Procedure ventas.TipoVisitanteInsertar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE ventas.TipoVisitanteInsertar
     @p_descripcion VARCHAR(50)
 AS
 BEGIN
@@ -99,7 +123,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE ventas.sp_ModificarTipoVisitante
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('ventas.TipoVisitanteModificar') AND type = 'P')
+    PRINT 'Creando Procedure ventas.TipoVisitanteModificar...';
+ELSE
+    PRINT 'OK - Procedure ventas.TipoVisitanteModificar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE ventas.TipoVisitanteModificar
     @p_id_tipo_visitante INT,
     @p_descripcion       VARCHAR(50)
 AS
@@ -120,7 +150,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE ventas.sp_EliminarTipoVisitante
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('ventas.TipoVisitanteEliminar') AND type = 'P')
+    PRINT 'Creando Procedure ventas.TipoVisitanteEliminar...';
+ELSE
+    PRINT 'OK - Procedure ventas.TipoVisitanteEliminar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE ventas.TipoVisitanteEliminar
     @p_id_tipo_visitante INT
 AS
 BEGIN
@@ -144,7 +180,13 @@ GO
 -- SCHEMA: ventas  |  TABLA: FormaPago
 -- ==============================================================
 
-CREATE PROCEDURE ventas.sp_InsertarFormaPago
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('ventas.FormaPagoInsertar') AND type = 'P')
+    PRINT 'Creando Procedure ventas.FormaPagoInsertar...';
+ELSE
+    PRINT 'OK - Procedure ventas.FormaPagoInsertar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE ventas.FormaPagoInsertar
     @p_descripcion VARCHAR(50)
 AS
 BEGIN
@@ -162,7 +204,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE ventas.sp_ModificarFormaPago
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('ventas.FormaPagoModificar') AND type = 'P')
+    PRINT 'Creando Procedure ventas.FormaPagoModificar...';
+ELSE
+    PRINT 'OK - Procedure ventas.FormaPagoModificar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE ventas.FormaPagoModificar
     @p_id_forma_pago INT,
     @p_descripcion   VARCHAR(50)
 AS
@@ -181,7 +229,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE ventas.sp_EliminarFormaPago
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('ventas.FormaPagoEliminar') AND type = 'P')
+    PRINT 'Creando Procedure ventas.FormaPagoEliminar...';
+ELSE
+    PRINT 'OK - Procedure ventas.FormaPagoEliminar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE ventas.FormaPagoEliminar
     @p_id_forma_pago INT
 AS
 BEGIN
@@ -203,7 +257,13 @@ GO
 -- SCHEMA: turismo  |  TABLA: TipoAtraccion
 -- ==============================================================
 
-CREATE PROCEDURE turismo.sp_InsertarTipoAtraccion
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('turismo.TipoAtraccionInsertar') AND type = 'P')
+    PRINT 'Creando Procedure turismo.TipoAtraccionInsertar...';
+ELSE
+    PRINT 'OK - Procedure turismo.TipoAtraccionInsertar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE turismo.TipoAtraccionInsertar
     @p_descripcion VARCHAR(50)
 AS
 BEGIN
@@ -221,7 +281,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE turismo.sp_ModificarTipoAtraccion
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('turismo.TipoAtraccionModificar') AND type = 'P')
+    PRINT 'Creando Procedure turismo.TipoAtraccionModificar...';
+ELSE
+    PRINT 'OK - Procedure turismo.TipoAtraccionModificar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE turismo.TipoAtraccionModificar
     @p_id_tipo_atraccion INT,
     @p_descripcion       VARCHAR(50)
 AS
@@ -240,7 +306,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE turismo.sp_EliminarTipoAtraccion
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('turismo.TipoAtraccionEliminar') AND type = 'P')
+    PRINT 'Creando Procedure turismo.TipoAtraccionEliminar...';
+ELSE
+    PRINT 'OK - Procedure turismo.TipoAtraccionEliminar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE turismo.TipoAtraccionEliminar
     @p_id_tipo_atraccion INT
 AS
 BEGIN
@@ -263,7 +335,13 @@ GO
 -- Baja lógica: se marca activo = 0
 -- ==============================================================
 
-CREATE PROCEDURE personal.sp_InsertarGuardaparque
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('personal.GuardaparqueInsertar') AND type = 'P')
+    PRINT 'Creando Procedure personal.GuardaparqueInsertar...';
+ELSE
+    PRINT 'OK - Procedure personal.GuardaparqueInsertar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE personal.GuardaparqueInsertar
     @p_nombre   VARCHAR(50),
     @p_apellido VARCHAR(50),
     @p_dni      VARCHAR(20),
@@ -292,7 +370,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE personal.sp_ModificarGuardaparque
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('personal.GuardaparqueModificar') AND type = 'P')
+    PRINT 'Creando Procedure personal.GuardaparqueModificar...';
+ELSE
+    PRINT 'OK - Procedure personal.GuardaparqueModificar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE personal.GuardaparqueModificar
     @p_id_guardaparque INT,
     @p_nombre          VARCHAR(50),
     @p_apellido        VARCHAR(50),
@@ -326,7 +410,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE personal.sp_EliminarGuardaparque
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('personal.GuardaparqueEliminar') AND type = 'P')
+    PRINT 'Creando Procedure personal.GuardaparqueEliminar...';
+ELSE
+    PRINT 'OK - Procedure personal.GuardaparqueEliminar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE personal.GuardaparqueEliminar
     @p_id_guardaparque INT
 AS
 BEGIN
@@ -348,7 +438,13 @@ GO
 -- SCHEMA: turismo  |  TABLA: Guia
 -- ==============================================================
 
-CREATE PROCEDURE turismo.sp_InsertarGuia
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('turismo.GuiaInsertar') AND type = 'P')
+    PRINT 'Creando Procedure turismo.GuiaInsertar...';
+ELSE
+    PRINT 'OK - Procedure turismo.GuiaInsertar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE turismo.GuiaInsertar
     @p_nombre                VARCHAR(50),
     @p_apellido              VARCHAR(50),
     @p_dni                   VARCHAR(20),
@@ -377,7 +473,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE turismo.sp_ModificarGuia
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('turismo.GuiaModificar') AND type = 'P')
+    PRINT 'Creando Procedure turismo.GuiaModificar...';
+ELSE
+    PRINT 'OK - Procedure turismo.GuiaModificar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE turismo.GuiaModificar
     @p_id_guia               INT,
     @p_nombre                VARCHAR(50),
     @p_apellido              VARCHAR(50),
@@ -409,7 +511,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE turismo.sp_EliminarGuia
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('turismo.GuiaEliminar') AND type = 'P')
+    PRINT 'Creando Procedure turismo.GuiaEliminar...';
+ELSE
+    PRINT 'OK - Procedure turismo.GuiaEliminar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE turismo.GuiaEliminar
     @p_id_guia INT
 AS
 BEGIN
@@ -433,7 +541,13 @@ GO
 -- SCHEMA: parques  |  TABLA: Parque
 -- ==============================================================
 
-CREATE PROCEDURE parques.sp_InsertarParque
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('parques.ParqueInsertar') AND type = 'P')
+    PRINT 'Creando Procedure parques.ParqueInsertar...';
+ELSE
+    PRINT 'OK - Procedure parques.ParqueInsertar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE parques.ParqueInsertar
     @p_codigo_oficial VARCHAR(50),
     @p_nombre         VARCHAR(100),
     @p_ubicacion      VARCHAR(255),
@@ -464,7 +578,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE parques.sp_ModificarParque
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('parques.ParqueModificar') AND type = 'P')
+    PRINT 'Creando Procedure parques.ParqueModificar...';
+ELSE
+    PRINT 'OK - Procedure parques.ParqueModificar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE parques.ParqueModificar
     @p_id_parque      INT,
     @p_codigo_oficial VARCHAR(50),
     @p_nombre         VARCHAR(100),
@@ -498,7 +618,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE parques.sp_EliminarParque
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('parques.ParqueEliminar') AND type = 'P')
+    PRINT 'Creando Procedure parques.ParqueEliminar...';
+ELSE
+    PRINT 'OK - Procedure parques.ParqueEliminar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE parques.ParqueEliminar
     @p_id_parque INT
 AS
 BEGIN
@@ -526,7 +652,13 @@ GO
 -- SCHEMA: comercial  |  TABLA: Empresa
 -- ==============================================================
 
-CREATE PROCEDURE comercial.sp_InsertarEmpresa
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('comercial.EmpresaInsertar') AND type = 'P')
+    PRINT 'Creando Procedure comercial.EmpresaInsertar...';
+ELSE
+    PRINT 'OK - Procedure comercial.EmpresaInsertar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE comercial.EmpresaInsertar
     @p_cuit         CHAR(11),
     @p_razon_social VARCHAR(150),
     @p_telefono     VARCHAR(30)  = NULL,
@@ -555,7 +687,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE comercial.sp_ModificarEmpresa
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('comercial.EmpresaModificar') AND type = 'P')
+    PRINT 'Creando Procedure comercial.EmpresaModificar...';
+ELSE
+    PRINT 'OK - Procedure comercial.EmpresaModificar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE comercial.EmpresaModificar
     @p_id_empresa   INT,
     @p_cuit         CHAR(11),
     @p_razon_social VARCHAR(150),
@@ -587,7 +725,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE comercial.sp_EliminarEmpresa
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('comercial.EmpresaEliminar') AND type = 'P')
+    PRINT 'Creando Procedure comercial.EmpresaEliminar...';
+ELSE
+    PRINT 'OK - Procedure comercial.EmpresaEliminar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE comercial.EmpresaEliminar
     @p_id_empresa INT
 AS
 BEGIN
@@ -609,7 +753,13 @@ GO
 -- SCHEMA: personal  |  TABLA: HistorialGuardaparque
 -- ==============================================================
 
-CREATE PROCEDURE personal.sp_InsertarHistorialGuardaparque
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('personal.HistorialGuardaparqueInsertar') AND type = 'P')
+    PRINT 'Creando Procedure personal.HistorialGuardaparqueInsertar...';
+ELSE
+    PRINT 'OK - Procedure personal.HistorialGuardaparqueInsertar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE personal.HistorialGuardaparqueInsertar
     @p_id_guardaparque INT,
     @p_id_parque       INT,
     @p_fecha_ingreso   DATE,
@@ -643,7 +793,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE personal.sp_ModificarHistorialGuardaparque
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('personal.HistorialGuardaparqueModificar') AND type = 'P')
+    PRINT 'Creando Procedure personal.HistorialGuardaparqueModificar...';
+ELSE
+    PRINT 'OK - Procedure personal.HistorialGuardaparqueModificar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE personal.HistorialGuardaparqueModificar
     @p_id_historial  INT,
     @p_fecha_egreso  DATE         = NULL,
     @p_motivo_egreso VARCHAR(255) = NULL
@@ -672,7 +828,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE personal.sp_EliminarHistorialGuardaparque
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('personal.HistorialGuardaparqueEliminar') AND type = 'P')
+    PRINT 'Creando Procedure personal.HistorialGuardaparqueEliminar...';
+ELSE
+    PRINT 'OK - Procedure personal.HistorialGuardaparqueEliminar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE personal.HistorialGuardaparqueEliminar
     @p_id_historial INT
 AS
 BEGIN
@@ -692,7 +854,13 @@ GO
 -- SCHEMA: turismo  |  TABLA: GuiaParque
 -- ==============================================================
 
-CREATE PROCEDURE turismo.sp_InsertarGuiaParque
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('turismo.GuiaParqueInsertar') AND type = 'P')
+    PRINT 'Creando Procedure turismo.GuiaParqueInsertar...';
+ELSE
+    PRINT 'OK - Procedure turismo.GuiaParqueInsertar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE turismo.GuiaParqueInsertar
     @p_id_guia             INT,
     @p_id_parque           INT,
     @p_fecha_autorizacion  DATE,
@@ -718,7 +886,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE turismo.sp_ModificarGuiaParque
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('turismo.GuiaParqueModificar') AND type = 'P')
+    PRINT 'Creando Procedure turismo.GuiaParqueModificar...';
+ELSE
+    PRINT 'OK - Procedure turismo.GuiaParqueModificar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE turismo.GuiaParqueModificar
     @p_id_guia             INT,
     @p_id_parque           INT,
     @p_fecha_autorizacion  DATE,
@@ -741,7 +915,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE turismo.sp_EliminarGuiaParque
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('turismo.GuiaParqueEliminar') AND type = 'P')
+    PRINT 'Creando Procedure turismo.GuiaParqueEliminar...';
+ELSE
+    PRINT 'OK - Procedure turismo.GuiaParqueEliminar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE turismo.GuiaParqueEliminar
     @p_id_guia   INT,
     @p_id_parque INT
 AS
@@ -762,7 +942,13 @@ GO
 -- SCHEMA: turismo  |  TABLA: AtraccionTour
 -- ==============================================================
 
-CREATE PROCEDURE turismo.sp_InsertarAtraccionTour
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('turismo.AtraccionTourInsertar') AND type = 'P')
+    PRINT 'Creando Procedure turismo.AtraccionTourInsertar...';
+ELSE
+    PRINT 'OK - Procedure turismo.AtraccionTourInsertar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE turismo.AtraccionTourInsertar
     @p_id_parque         INT,
     @p_id_tipo_atraccion INT,
     @p_nombre            VARCHAR(100),
@@ -794,7 +980,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE turismo.sp_ModificarAtraccionTour
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('turismo.AtraccionTourModificar') AND type = 'P')
+    PRINT 'Creando Procedure turismo.AtraccionTourModificar...';
+ELSE
+    PRINT 'OK - Procedure turismo.AtraccionTourModificar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE turismo.AtraccionTourModificar
     @p_id_atraccion_tour INT,
     @p_id_tipo_atraccion INT,
     @p_nombre            VARCHAR(100),
@@ -828,7 +1020,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE turismo.sp_EliminarAtraccionTour
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('turismo.AtraccionTourEliminar') AND type = 'P')
+    PRINT 'Creando Procedure turismo.AtraccionTourEliminar...';
+ELSE
+    PRINT 'OK - Procedure turismo.AtraccionTourEliminar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE turismo.AtraccionTourEliminar
     @p_id_atraccion_tour INT
 AS
 BEGIN
@@ -852,7 +1050,13 @@ GO
 -- SCHEMA: turismo  |  TABLA: TourGuia
 -- ==============================================================
 
-CREATE PROCEDURE turismo.sp_InsertarTourGuia
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('turismo.TourGuiaInsertar') AND type = 'P')
+    PRINT 'Creando Procedure turismo.TourGuiaInsertar...';
+ELSE
+    PRINT 'OK - Procedure turismo.TourGuiaInsertar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE turismo.TourGuiaInsertar
     @p_id_atraccion_tour INT,
     @p_id_guia           INT
 AS
@@ -884,7 +1088,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE turismo.sp_EliminarTourGuia
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('turismo.TourGuiaEliminar') AND type = 'P')
+    PRINT 'Creando Procedure turismo.TourGuiaEliminar...';
+ELSE
+    PRINT 'OK - Procedure turismo.TourGuiaEliminar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE turismo.TourGuiaEliminar
     @p_id_atraccion_tour INT,
     @p_id_guia           INT
 AS
@@ -905,7 +1115,13 @@ GO
 -- SCHEMA: ventas  |  TABLA: HistorialPrecio
 -- ==============================================================
 
-CREATE PROCEDURE ventas.sp_InsertarHistorialPrecio
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('ventas.HistorialPrecioInsertar') AND type = 'P')
+    PRINT 'Creando Procedure ventas.HistorialPrecioInsertar...';
+ELSE
+    PRINT 'OK - Procedure ventas.HistorialPrecioInsertar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE ventas.HistorialPrecioInsertar
     @p_precio            DECIMAL(12,2),
     @p_fecha_desde       DATE,
     @p_id_parque         INT,
@@ -931,7 +1147,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE ventas.sp_ModificarHistorialPrecio
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('ventas.HistorialPrecioModificar') AND type = 'P')
+    PRINT 'Creando Procedure ventas.HistorialPrecioModificar...';
+ELSE
+    PRINT 'OK - Procedure ventas.HistorialPrecioModificar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE ventas.HistorialPrecioModificar
     @p_id_historial_precio INT,
     @p_precio              DECIMAL(12,2),
     @p_fecha_desde         DATE
@@ -955,7 +1177,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE ventas.sp_EliminarHistorialPrecio
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('ventas.HistorialPrecioEliminar') AND type = 'P')
+    PRINT 'Creando Procedure ventas.HistorialPrecioEliminar...';
+ELSE
+    PRINT 'OK - Procedure ventas.HistorialPrecioEliminar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE ventas.HistorialPrecioEliminar
     @p_id_historial_precio INT
 AS
 BEGIN
@@ -977,7 +1205,13 @@ GO
 -- SCHEMA: comercial  |  TABLA: Concesion
 -- ==============================================================
 
-CREATE PROCEDURE comercial.sp_InsertarConcesion
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('comercial.ConcesionInsertar') AND type = 'P')
+    PRINT 'Creando Procedure comercial.ConcesionInsertar...';
+ELSE
+    PRINT 'OK - Procedure comercial.ConcesionInsertar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE comercial.ConcesionInsertar
     @p_id_parque      INT,
     @p_id_empresa     INT,
     @p_tipo_actividad VARCHAR(100),
@@ -1009,7 +1243,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE comercial.sp_ModificarConcesion
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('comercial.ConcesionModificar') AND type = 'P')
+    PRINT 'Creando Procedure comercial.ConcesionModificar...';
+ELSE
+    PRINT 'OK - Procedure comercial.ConcesionModificar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE comercial.ConcesionModificar
     @p_id_concesion   INT,
     @p_tipo_actividad VARCHAR(100),
     @p_fecha_inicio   DATE,
@@ -1038,7 +1278,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE comercial.sp_EliminarConcesion
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('comercial.ConcesionEliminar') AND type = 'P')
+    PRINT 'Creando Procedure comercial.ConcesionEliminar...';
+ELSE
+    PRINT 'OK - Procedure comercial.ConcesionEliminar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE comercial.ConcesionEliminar
     @p_id_concesion INT
 AS
 BEGIN
@@ -1060,7 +1306,13 @@ GO
 -- SCHEMA: comercial  |  TABLA: ObligacionCanon
 -- ==============================================================
 
-CREATE PROCEDURE comercial.sp_InsertarObligacionCanon
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('comercial.ObligacionCanonInsertar') AND type = 'P')
+    PRINT 'Creando Procedure comercial.ObligacionCanonInsertar...';
+ELSE
+    PRINT 'OK - Procedure comercial.ObligacionCanonInsertar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE comercial.ObligacionCanonInsertar
     @p_id_concesion      INT,
     @p_mes               TINYINT,
     @p_anio              SMALLINT,
@@ -1094,7 +1346,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE comercial.sp_ModificarObligacionCanon
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('comercial.ObligacionCanonModificar') AND type = 'P')
+    PRINT 'Creando Procedure comercial.ObligacionCanonModificar...';
+ELSE
+    PRINT 'OK - Procedure comercial.ObligacionCanonModificar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE comercial.ObligacionCanonModificar
     @p_id_obligacion     INT,
     @p_monto_obligado    DECIMAL(12,2),
     @p_estado            VARCHAR(20),
@@ -1121,7 +1379,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE comercial.sp_EliminarObligacionCanon
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('comercial.ObligacionCanonEliminar') AND type = 'P')
+    PRINT 'Creando Procedure comercial.ObligacionCanonEliminar...';
+ELSE
+    PRINT 'OK - Procedure comercial.ObligacionCanonEliminar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE comercial.ObligacionCanonEliminar
     @p_id_obligacion INT
 AS
 BEGIN
@@ -1143,7 +1407,13 @@ GO
 -- SCHEMA: comercial  |  TABLA: PagoCanon
 -- ==============================================================
 
-CREATE PROCEDURE comercial.sp_InsertarPagoCanon
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('comercial.PagoCanonInsertar') AND type = 'P')
+    PRINT 'Creando Procedure comercial.PagoCanonInsertar...';
+ELSE
+    PRINT 'OK - Procedure comercial.PagoCanonInsertar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE comercial.PagoCanonInsertar
     @p_id_obligacion INT,
     @p_fecha_pago    DATE,
     @p_monto_pagado  DECIMAL(12,2)
@@ -1168,7 +1438,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE comercial.sp_EliminarPagoCanon
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('comercial.PagoCanonEliminar') AND type = 'P')
+    PRINT 'Creando Procedure comercial.PagoCanonEliminar...';
+ELSE
+    PRINT 'OK - Procedure comercial.PagoCanonEliminar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE comercial.PagoCanonEliminar
     @p_id_pago INT
 AS
 BEGIN
@@ -1188,7 +1464,13 @@ GO
 -- SCHEMA: ventas  |  TABLA: Ticket
 -- ==============================================================
 
-CREATE PROCEDURE ventas.sp_InsertarTicket
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('ventas.TicketInsertar') AND type = 'P')
+    PRINT 'Creando Procedure ventas.TicketInsertar...';
+ELSE
+    PRINT 'OK - Procedure ventas.TicketInsertar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE ventas.TicketInsertar
     @p_punto_venta   CHAR(4),
     @p_numero        VARCHAR(50),
     @p_fecha_venta   DATETIME2,
@@ -1217,7 +1499,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE ventas.sp_ModificarTicket
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('ventas.TicketModificar') AND type = 'P')
+    PRINT 'Creando Procedure ventas.TicketModificar...';
+ELSE
+    PRINT 'OK - Procedure ventas.TicketModificar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE ventas.TicketModificar
     @p_id_ticket     INT,
     @p_id_forma_pago INT,
     @p_total         DECIMAL(12,2)
@@ -1241,7 +1529,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE ventas.sp_EliminarTicket
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('ventas.TicketEliminar') AND type = 'P')
+    PRINT 'Creando Procedure ventas.TicketEliminar...';
+ELSE
+    PRINT 'OK - Procedure ventas.TicketEliminar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE ventas.TicketEliminar
     @p_id_ticket INT
 AS
 BEGIN
@@ -1263,7 +1557,13 @@ GO
 -- SCHEMA: ventas  |  TABLA: TicketDetalle
 -- ==============================================================
 
-CREATE PROCEDURE ventas.sp_InsertarTicketDetalle
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('ventas.TicketDetalleInsertar') AND type = 'P')
+    PRINT 'Creando Procedure ventas.TicketDetalleInsertar...';
+ELSE
+    PRINT 'OK - Procedure ventas.TicketDetalleInsertar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE ventas.TicketDetalleInsertar
     @p_id_ticket           INT,
     @p_id_parque           INT,
     @p_id_historial_precio INT          = NULL,
@@ -1297,7 +1597,7 @@ BEGIN
     IF ISNULL(@p_precio_unitario, -1) < 0
         SET @errores += N'- El precio unitario no puede ser negativo.' + CHAR(13);
     IF ISNULL(@p_subtotal, -1) < 0
-        SET @errores += N'- El subtotal no puede ser negativo.' + CHAR(13);
+        SET @errores += N'- El subtotal no puede ser un monto negativo.' + CHAR(13);
 
     IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
 
@@ -1310,7 +1610,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE ventas.sp_ModificarTicketDetalle
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('ventas.TicketDetalleModificar') AND type = 'P')
+    PRINT 'Creando Procedure ventas.TicketDetalleModificar...';
+ELSE
+    PRINT 'OK - Procedure ventas.TicketDetalleModificar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE ventas.TicketDetalleModificar
     @p_id_detalle      INT,
     @p_cantidad        INT,
     @p_precio_unitario DECIMAL(12,2),
@@ -1327,7 +1633,7 @@ BEGIN
     IF ISNULL(@p_precio_unitario, -1) < 0
         SET @errores += N'- El precio unitario no puede ser negativo.' + CHAR(13);
     IF ISNULL(@p_subtotal, -1) < 0
-        SET @errores += N'- El subtotal no puede ser negativo.' + CHAR(13);
+        SET @errores += N'- El subtotal no puede ser un monto negativo.' + CHAR(13);
 
     IF @errores != N'' BEGIN RAISERROR(@errores, 16, 1); RETURN; END
 
@@ -1337,7 +1643,13 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE ventas.sp_EliminarTicketDetalle
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('ventas.TicketDetalleEliminar') AND type = 'P')
+    PRINT 'Creando Procedure ventas.TicketDetalleEliminar...';
+ELSE
+    PRINT 'OK - Procedure ventas.TicketDetalleEliminar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE ventas.TicketDetalleEliminar
     @p_id_detalle INT
 AS
 BEGIN
