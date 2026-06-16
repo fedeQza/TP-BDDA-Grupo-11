@@ -57,9 +57,11 @@ Descripción: Script de pruebas para
 USE ParquesNacionalesDB;
 GO
 
-DECLARE @v_archivo_principal    VARCHAR(500) = 'C:\TP-BDDA\data\estadisticas_visitantes.csv';
-DECLARE @v_archivo_casos_error  VARCHAR(500) = 'C:\TP-BDDA\data\estadisticas_visitantes_casos_error.csv';
-DECLARE @v_archivo_inexistente  VARCHAR(500) = 'C:\TP-BDDA\data\no_existe.csv';
+-- Solo se pasa el nombre del archivo; el SP busca automáticamente
+-- en C:\Users\secon\OneDrive\Escritorio\TP-BDDA\
+DECLARE @v_archivo_principal    VARCHAR(500) = 'estadisticas_visitantes.csv';
+DECLARE @v_archivo_casos_error  VARCHAR(500) = 'estadisticas_visitantes_casos_error.csv';
+DECLARE @v_archivo_inexistente  VARCHAR(500) = 'no_existe.csv';
 
 PRINT '==============================================================';
 PRINT ' CASO 1 - Importación exitosa del archivo principal';
@@ -71,7 +73,7 @@ EXEC importaciones.ImportarEstadisticasVisitantes @p_ruta_archivo = @v_archivo_p
 SELECT * FROM estadisticas.VisitantesParques ORDER BY indice_tiempo, region_destino, origen_visitantes;
 GO
 
-DECLARE @v_archivo_principal VARCHAR(500) = 'C:\TP-BDDA\data\estadisticas_visitantes.csv';
+DECLARE @v_archivo_principal VARCHAR(500) = 'estadisticas_visitantes.csv';
 
 PRINT '==============================================================';
 PRINT ' CASO 2 - Reimportación del mismo archivo (no debe duplicar)';
@@ -84,7 +86,7 @@ EXEC importaciones.ImportarEstadisticasVisitantes @p_ruta_archivo = @v_archivo_p
 SELECT COUNT(*) AS total_filas_visitantes FROM estadisticas.VisitantesParques;
 GO
 
-DECLARE @v_archivo_casos_error VARCHAR(500) = 'C:\TP-BDDA\data\estadisticas_visitantes_casos_error.csv';
+DECLARE @v_archivo_casos_error VARCHAR(500) = 'estadisticas_visitantes_casos_error.csv';
 
 PRINT '==============================================================';
 PRINT ' CASO 3 - Archivo con: visitas negativas, fecha inválida,';
@@ -100,9 +102,10 @@ SELECT * FROM estadisticas.VisitantesParques
 WHERE region_destino = 'santa cruz' AND origen_visitantes = 'residentes';
 
 -- Evidencia: detalle de las filas rechazadas para este archivo
+DECLARE @v_ruta_completa_error VARCHAR(1000) = 'C:\Users\secon\OneDrive\Escritorio\TP-BDDA\' + @v_archivo_casos_error;
 SELECT *
 FROM estadisticas.ErroresImportacion
-WHERE archivo_origen = @v_archivo_casos_error
+WHERE archivo_origen = @v_ruta_completa_error
 ORDER BY id_error;
 GO
 
@@ -112,7 +115,7 @@ PRINT '          (la fila ya existente con su valor corregido no';
 PRINT '           debe volver a actualizarse ni duplicarse)';
 PRINT '==============================================================';
 
-DECLARE @v_archivo_casos_error VARCHAR(500) = 'C:\TP-BDDA\data\estadisticas_visitantes_casos_error.csv';
+DECLARE @v_archivo_casos_error VARCHAR(500) = 'estadisticas_visitantes_casos_error.csv';
 
 EXEC importaciones.ImportarEstadisticasVisitantes @p_ruta_archivo = @v_archivo_casos_error;
 -- Se espera registros_insertados = 0, registros_actualizados = 0,
@@ -123,7 +126,7 @@ PRINT '==============================================================';
 PRINT ' CASO 5 - Archivo inexistente';
 PRINT '==============================================================';
 
-DECLARE @v_archivo_inexistente VARCHAR(500) = 'C:\TP-BDDA\data\no_existe.csv';
+DECLARE @v_archivo_inexistente VARCHAR(500) = 'no_existe.csv';
 
 BEGIN TRY
     EXEC importaciones.ImportarEstadisticasVisitantes @p_ruta_archivo = @v_archivo_inexistente;

@@ -103,11 +103,19 @@ BEGIN
         region_destino_raw    VARCHAR(200) NULL,
         origen_visitantes_raw VARCHAR(100) NULL,
         visitas_raw           VARCHAR(50)  NULL,
-        observaciones_raw     VARCHAR(500) NULL
+        observaciones_raw     VARCHAR(MAX) NULL
     );
 END
 ELSE
     PRINT 'OK - Tabla estadisticas.StagingVisitantes ya existe, se omite creación.';
+GO
+
+-- Vista sin la columna IDENTITY: BULK INSERT la usa para evitar
+-- el conflicto entre los 5 campos del CSV y el id_staging INT.
+CREATE OR ALTER VIEW estadisticas.StagingVisitantesImport AS
+    SELECT indice_tiempo_raw, region_destino_raw, origen_visitantes_raw,
+           visitas_raw, observaciones_raw
+    FROM estadisticas.StagingVisitantes;
 GO
 
 -- ==============================================================
@@ -171,23 +179,26 @@ ELSE
 GO
 
 CREATE OR ALTER PROCEDURE importaciones.ImportarEstadisticasVisitantes
-    @p_ruta_archivo VARCHAR(500)
+    @p_ruta_archivo VARCHAR(500)   -- nombre del archivo (ej.: 'estadisticas_visitantes.csv')
 AS
 BEGIN
     SET NOCOUNT ON;
     SET DATEFORMAT ymd;
 
-    DECLARE @v_existe_archivo INT       = 0;
+    -- Carpeta donde se encuentra el archivo (debe ser accesible por el servicio SQL Server)
+    DECLARE @v_ruta_base     VARCHAR(500)  = 'C:\Importaciones\';
+    DECLARE @v_ruta_completa VARCHAR(1000) = @v_ruta_base + @p_ruta_archivo;
+    DECLARE @v_existe_archivo INT          = 0;
     DECLARE @v_sql            NVARCHAR(MAX);
-    DECLARE @v_insertados     INT       = 0;
-    DECLARE @v_actualizados   INT       = 0;
-    DECLARE @v_rechazados     INT       = 0;
+    DECLARE @v_insertados     INT          = 0;
+    DECLARE @v_actualizados   INT          = 0;
+    DECLARE @v_rechazados     INT          = 0;
 
     BEGIN TRY
         ----------------------------------------------------------
         -- 1) Validar existencia del archivo
         ----------------------------------------------------------
-        EXEC master.dbo.xp_fileexist @p_ruta_archivo, @v_existe_archivo OUTPUT;
+        EXEC master.dbo.xp_fileexist @v_ruta_completa, @v_existe_archivo OUTPUT;
 
         IF @v_existe_archivo IS NULL OR @v_existe_archivo = 0
             THROW 50000, 'El archivo especificado no existe o no es accesible desde el motor de SQL Server.', 1;
@@ -198,17 +209,16 @@ BEGIN
         TRUNCATE TABLE estadisticas.StagingVisitantes;
 
         SET @v_sql = N'
-            BULK INSERT estadisticas.StagingVisitantes
-            FROM ''' + REPLACE(@p_ruta_archivo, '''', '''''') + N'''
+            BULK INSERT estadisticas.StagingVisitantesImport
+            FROM ''' + REPLACE(@v_ruta_completa, '''', '''''') + N'''
             WITH (
-                FIRSTROW        = 2,
-                FIELDTERMINATOR = '','',
-                ROWTERMINATOR   = ''0x0a'',
                 FORMAT          = ''CSV'',
                 FIELDQUOTE      = ''"'',
+                FIELDTERMINATOR = '','',
+                ROWTERMINATOR   = ''0x0a'',
+                FIRSTROW        = 2,
                 CODEPAGE        = ''65001'',
-                MAXERRORS       = 2147483647,
-                TABLOCK
+                MAXERRORS       = 2147483647
             );';
 
         EXEC sp_executesql @v_sql;
@@ -283,7 +293,7 @@ BEGIN
             (archivo_origen, motivo_error, indice_tiempo_valor, region_destino_valor,
              origen_visitantes_valor, visitas_valor, observaciones_valor)
         SELECT
-            @p_ruta_archivo,
+            @v_ruta_completa,
             v.motivo_error,
             s.indice_tiempo_raw,
             s.region_destino_raw,
