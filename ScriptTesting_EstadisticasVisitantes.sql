@@ -15,129 +15,166 @@ Descripción: Script de pruebas para
                4. 04-ScriptEstadisticasVisitantes.sql
                5. Este script
 
-             ANTES DE EJECUTAR: crear los dos archivos CSV
-             descriptos más abajo y ajustar las rutas en las
-             variables @v_archivo_principal y
-             @v_archivo_casos_error según donde se hayan
-             guardado en el servidor de SQL Server.
+             Cada caso puede ejecutarse de forma independiente
+             seleccionando el bloque correspondiente.
 
-             --------------------------------------------------
-             Archivo 1 (@v_archivo_principal) - dataset real,
-             por ejemplo "estadisticas_visitantes.csv":
+             Archivo de errores requerido para CASO 3 y 4:
+             Crear C:\Importaciones\casos_error.csv con:
 
-                 indice_tiempo,region_de_destino,origen_visitantes,visitas,observaciones
-                 2008-1-01,buenos aires,no residentes,0,
-                 2008-1-01,buenos aires,residentes,885,
-                 2008-1-01,buenos aires,total,885,
-                 2008-1-01,cordoba,no residentes,145,
-                 2008-1-01,cordoba,residentes,717,
-                 2008-1-01,cordoba,total,862,
-
-             --------------------------------------------------
-             Archivo 2 (@v_archivo_casos_error) - casos de
-             error y duplicados, por ejemplo
-             "estadisticas_visitantes_casos_error.csv":
-
-                 indice_tiempo,region_de_destino,origen_visitantes,visitas,observaciones
-                 2024-1-01,santa cruz,residentes,500,Carga inicial
-                 2024-1-01,santa cruz,residentes,550,Correccion de carga
-                 2024-1-01,chubut,residentes,-10,Visitas negativas - debe rechazarse
-                 2024-99-01,neuquen,residentes,300,Fecha invalida - debe rechazarse
-                 2024-1-01,,no residentes,120,Region vacia - debe rechazarse
-                 2024-1-01,misiones,total,abc,Visitas no numericas - debe rechazarse
-
-             Las dos primeras filas de este archivo comparten
-             la misma clave (2024-1-01, santa cruz, residentes):
-             se espera que la primera se rechace como
-             "duplicado dentro del archivo" y se conserve la
-             segunda (visitas=550).
+               indice_tiempo,region_de_destino,origen_visitantes,visitas,observaciones
+               2024-1-01,santa cruz,residentes,500,Carga inicial
+               2024-1-01,santa cruz,residentes,550,Correccion de carga
+               2024-1-01,chubut,residentes,-10,Visitas negativas - debe rechazarse
+               2024-99-01,neuquen,residentes,300,Fecha invalida - debe rechazarse
+               2024-1-01,,no residentes,120,Region vacia - debe rechazarse
+               2024-1-01,misiones,total,abc,Visitas no numericas - debe rechazarse
 ==============================================================
 */
 
 USE ParquesNacionalesDB;
 GO
 
--- Solo se pasa el nombre del archivo; el SP busca automáticamente
--- en C:\Users\secon\OneDrive\Escritorio\TP-BDDA\
-DECLARE @v_archivo_principal    VARCHAR(500) = 'estadisticas_visitantes.csv';
-DECLARE @v_archivo_casos_error  VARCHAR(500) = 'estadisticas_visitantes_casos_error.csv';
-DECLARE @v_archivo_inexistente  VARCHAR(500) = 'no_existe.csv';
+-- ==============================================================
+-- CASO 1 - Importación exitosa del archivo principal
+-- Se espera: registros_insertados > 0, rechazados = 0
+-- ==============================================================
 
 PRINT '==============================================================';
 PRINT ' CASO 1 - Importación exitosa del archivo principal';
 PRINT '==============================================================';
 
-EXEC importaciones.ImportarEstadisticasVisitantes @p_ruta_archivo = @v_archivo_principal;
+EXEC importaciones.ImportarEstadisticasVisitantes
+    @p_ruta_archivo = 'visitas-residentes-y-no-residentes-por-region.csv';
 
--- Evidencia: filas cargadas en la tabla destino
-SELECT * FROM estadisticas.VisitantesParques ORDER BY indice_tiempo, region_destino, origen_visitantes;
+SELECT TOP 20
+    id_visitantes_parque,
+    indice_tiempo,
+    region_destino,
+    origen_visitantes,
+    visitas,
+    observaciones,
+    fecha_carga
+FROM estadisticas.VisitantesParques
+ORDER BY indice_tiempo, region_destino, origen_visitantes;
+
+SELECT COUNT(*) AS total_filas_importadas FROM estadisticas.VisitantesParques;
 GO
 
-DECLARE @v_archivo_principal VARCHAR(500) = 'estadisticas_visitantes.csv';
+-- ==============================================================
+-- CASO 2 - Reimportación del mismo archivo
+-- Se espera: registros_insertados = 0, registros_actualizados = 0
+-- La cantidad total de filas no debe cambiar respecto al CASO 1
+-- ==============================================================
 
 PRINT '==============================================================';
 PRINT ' CASO 2 - Reimportación del mismo archivo (no debe duplicar)';
 PRINT '==============================================================';
 
-EXEC importaciones.ImportarEstadisticasVisitantes @p_ruta_archivo = @v_archivo_principal;
--- Se espera registros_insertados = 0 y registros_actualizados = 0
+DECLARE @v_total_antes INT = (SELECT COUNT(*) FROM estadisticas.VisitantesParques);
 
--- Evidencia: la cantidad de filas no cambió respecto al CASO 1
-SELECT COUNT(*) AS total_filas_visitantes FROM estadisticas.VisitantesParques;
+EXEC importaciones.ImportarEstadisticasVisitantes
+    @p_ruta_archivo = 'visitas-residentes-y-no-residentes-por-region.csv';
+
+DECLARE @v_total_despues INT = (SELECT COUNT(*) FROM estadisticas.VisitantesParques);
+
+SELECT
+    @v_total_antes   AS filas_antes,
+    @v_total_despues AS filas_despues,
+    CASE WHEN @v_total_antes = @v_total_despues
+         THEN 'OK - sin duplicados'
+         ELSE 'ERROR - se generaron duplicados'
+    END AS resultado;
 GO
 
-DECLARE @v_archivo_casos_error VARCHAR(500) = 'estadisticas_visitantes_casos_error.csv';
+-- ==============================================================
+-- CASO 3 - Archivo con casos de error mixtos
+-- Se espera: registros_insertados = 1 (santa cruz/residentes, visitas=550)
+--            registros_rechazados = 5 (duplicado + negativos +
+--            fecha inválida + región vacía + visitas no numéricas)
+-- ==============================================================
 
 PRINT '==============================================================';
-PRINT ' CASO 3 - Archivo con: visitas negativas, fecha inválida,';
-PRINT '          región vacía, visitas no numéricas y duplicados';
+PRINT ' CASO 3 - Visitas negativas, fecha inválida, región vacía,';
+PRINT '          visitas no numéricas y duplicado dentro del archivo';
 PRINT '==============================================================';
 
-EXEC importaciones.ImportarEstadisticasVisitantes @p_ruta_archivo = @v_archivo_casos_error;
--- Se espera registros_insertados = 1 (santa cruz / residentes, visitas=550)
--- y registros_rechazados = 5
+EXEC importaciones.ImportarEstadisticasVisitantes
+    @p_ruta_archivo = 'casos_error.csv';
 
--- Evidencia: la fila válida quedó cargada con el valor de la última ocurrencia
-SELECT * FROM estadisticas.VisitantesParques
-WHERE region_destino = 'santa cruz' AND origen_visitantes = 'residentes';
+-- Fila válida que debió insertarse
+SELECT TOP 5
+    indice_tiempo,
+    region_destino,
+    origen_visitantes,
+    visitas,
+    observaciones
+FROM estadisticas.VisitantesParques
+WHERE region_destino = 'santa cruz'
+  AND origen_visitantes = 'residentes';
 
--- Evidencia: detalle de las filas rechazadas para este archivo
-DECLARE @v_ruta_completa_error VARCHAR(1000) = 'C:\Users\secon\OneDrive\Escritorio\TP-BDDA\' + @v_archivo_casos_error;
-SELECT *
+-- Filas rechazadas registradas en la tabla de errores
+SELECT TOP 10
+    id_error,
+    fecha_error,
+    motivo_error,
+    indice_tiempo_valor,
+    region_destino_valor,
+    visitas_valor
 FROM estadisticas.ErroresImportacion
-WHERE archivo_origen = @v_ruta_completa_error
+WHERE archivo_origen = 'C:\Importaciones\casos_error.csv'
 ORDER BY id_error;
 GO
 
+-- ==============================================================
+-- CASO 4 - Reimportación del archivo de errores
+-- Se espera: registros_insertados = 0, registros_actualizados = 0
+-- La fila de santa cruz ya existe y no cambió, no debe actualizarse
+-- ==============================================================
+
 PRINT '==============================================================';
 PRINT ' CASO 4 - Reimportación del archivo de casos de error';
-PRINT '          (la fila ya existente con su valor corregido no';
-PRINT '           debe volver a actualizarse ni duplicarse)';
+PRINT '          (sin cambios en la tabla destino)';
 PRINT '==============================================================';
 
-DECLARE @v_archivo_casos_error VARCHAR(500) = 'estadisticas_visitantes_casos_error.csv';
+EXEC importaciones.ImportarEstadisticasVisitantes
+    @p_ruta_archivo = 'casos_error.csv';
 
-EXEC importaciones.ImportarEstadisticasVisitantes @p_ruta_archivo = @v_archivo_casos_error;
--- Se espera registros_insertados = 0, registros_actualizados = 0,
--- registros_rechazados = 5 (se vuelven a registrar como errores)
+SELECT TOP 5
+    indice_tiempo,
+    region_destino,
+    origen_visitantes,
+    visitas,
+    fecha_carga,
+    fecha_actualizacion
+FROM estadisticas.VisitantesParques
+WHERE region_destino = 'santa cruz'
+  AND origen_visitantes = 'residentes';
 GO
+
+-- ==============================================================
+-- CASO 5 - Archivo inexistente
+-- Se espera: error controlado con mensaje descriptivo
+-- ==============================================================
 
 PRINT '==============================================================';
 PRINT ' CASO 5 - Archivo inexistente';
 PRINT '==============================================================';
 
-DECLARE @v_archivo_inexistente VARCHAR(500) = 'no_existe.csv';
-
 BEGIN TRY
-    EXEC importaciones.ImportarEstadisticasVisitantes @p_ruta_archivo = @v_archivo_inexistente;
+    EXEC importaciones.ImportarEstadisticasVisitantes
+        @p_ruta_archivo = 'no_existe.csv';
 END TRY
 BEGIN CATCH
-    PRINT 'OK - Error esperado: ' + ERROR_MESSAGE();
+    PRINT 'OK - Error esperado capturado: ' + ERROR_MESSAGE();
 END CATCH
 GO
 
+-- ==============================================================
+-- VERIFICACIÓN FINAL - La tabla de staging debe estar vacía
+-- ==============================================================
+
 PRINT '==============================================================';
-PRINT ' Verificación final: la tabla de staging quedó vacía';
+PRINT ' Verificación final: staging debe estar vacío';
 PRINT '==============================================================';
 
 SELECT COUNT(*) AS filas_en_staging FROM estadisticas.StagingVisitantes;
