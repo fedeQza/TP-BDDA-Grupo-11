@@ -106,10 +106,7 @@ CREATE TABLE estadisticas.StagingVisitantes (
 );
 GO
 
--- Eliminar la vista de staging si fue creada por una versión anterior del script.
-IF OBJECT_ID('estadisticas.StagingVisitantesImport', 'V') IS NOT NULL
-    DROP VIEW estadisticas.StagingVisitantesImport;
-GO
+
 
 -- ==============================================================
 -- TABLA DE ERRORES: estadisticas.ErroresImportacion
