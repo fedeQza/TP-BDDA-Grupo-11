@@ -94,28 +94,21 @@ GO
 --   observaciones      -> observaciones_raw
 -- ==============================================================
 
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'StagingVisitantes' AND schema_id = SCHEMA_ID('estadisticas'))
-BEGIN
-    PRINT 'Creando tabla estadisticas.StagingVisitantes...';
-    CREATE TABLE estadisticas.StagingVisitantes (
-        id_staging            INT IDENTITY(1,1) PRIMARY KEY,
-        indice_tiempo_raw     VARCHAR(30)  NULL,
-        region_destino_raw    VARCHAR(200) NULL,
-        origen_visitantes_raw VARCHAR(100) NULL,
-        visitas_raw           VARCHAR(50)  NULL,
-        observaciones_raw     VARCHAR(MAX) NULL
-    );
-END
-ELSE
-    PRINT 'OK - Tabla estadisticas.StagingVisitantes ya existe, se omite creación.';
+IF OBJECT_ID('estadisticas.StagingVisitantes', 'U') IS NOT NULL
+    DROP TABLE estadisticas.StagingVisitantes;
+PRINT 'Creando tabla estadisticas.StagingVisitantes...';
+CREATE TABLE estadisticas.StagingVisitantes (
+    indice_tiempo_raw     VARCHAR(30)  NULL,
+    region_destino_raw    VARCHAR(200) NULL,
+    origen_visitantes_raw VARCHAR(100) NULL,
+    visitas_raw           VARCHAR(50)  NULL,
+    observaciones_raw     VARCHAR(MAX) NULL
+);
 GO
 
--- Vista sin la columna IDENTITY: BULK INSERT la usa para evitar
--- el conflicto entre los 5 campos del CSV y el id_staging INT.
-CREATE OR ALTER VIEW estadisticas.StagingVisitantesImport AS
-    SELECT indice_tiempo_raw, region_destino_raw, origen_visitantes_raw,
-           visitas_raw, observaciones_raw
-    FROM estadisticas.StagingVisitantes;
+-- Eliminar la vista de staging si fue creada por una versión anterior del script.
+IF OBJECT_ID('estadisticas.StagingVisitantesImport', 'V') IS NOT NULL
+    DROP VIEW estadisticas.StagingVisitantesImport;
 GO
 
 -- ==============================================================
@@ -209,7 +202,7 @@ BEGIN
         TRUNCATE TABLE estadisticas.StagingVisitantes;
 
         SET @v_sql = N'
-            BULK INSERT estadisticas.StagingVisitantesImport
+            BULK INSERT estadisticas.StagingVisitantes
             FROM ''' + REPLACE(@v_ruta_completa, '''', '''''') + N'''
             WITH (
                 FORMAT          = ''CSV'',
@@ -229,24 +222,36 @@ BEGIN
         IF OBJECT_ID('tempdb..#StagingValidado') IS NOT NULL DROP TABLE #StagingValidado;
 
         CREATE TABLE #StagingValidado (
-            id_staging        INT          NOT NULL PRIMARY KEY,
-            indice_tiempo     DATE         NULL,
-            region_destino    VARCHAR(100) NULL,
-            origen_visitantes VARCHAR(50)  NULL,
-            visitas           INT          NULL,
-            observaciones     VARCHAR(500) NULL,
-            motivo_error      VARCHAR(500) NULL
+            row_num               INT          NOT NULL PRIMARY KEY,
+            indice_tiempo         DATE         NULL,
+            region_destino        VARCHAR(100) NULL,
+            origen_visitantes     VARCHAR(50)  NULL,
+            visitas               INT          NULL,
+            observaciones         VARCHAR(500) NULL,
+            indice_tiempo_raw     VARCHAR(30)  NULL,
+            region_destino_raw    VARCHAR(200) NULL,
+            origen_visitantes_raw VARCHAR(100) NULL,
+            visitas_raw           VARCHAR(50)  NULL,
+            observaciones_raw     VARCHAR(500) NULL,
+            motivo_error          VARCHAR(500) NULL
         );
 
         INSERT INTO #StagingValidado
-            (id_staging, indice_tiempo, region_destino, origen_visitantes, visitas, observaciones, motivo_error)
+            (row_num, indice_tiempo, region_destino, origen_visitantes, visitas, observaciones,
+             indice_tiempo_raw, region_destino_raw, origen_visitantes_raw, visitas_raw, observaciones_raw,
+             motivo_error)
         SELECT
-            s.id_staging,
+            ROW_NUMBER() OVER (ORDER BY (SELECT NULL)),
             TRY_CAST(LTRIM(RTRIM(s.indice_tiempo_raw)) AS DATE),
             NULLIF(LTRIM(RTRIM(s.region_destino_raw)), ''),
             NULLIF(LTRIM(RTRIM(s.origen_visitantes_raw)), ''),
             TRY_CAST(LTRIM(RTRIM(s.visitas_raw)) AS INT),
             NULLIF(LTRIM(RTRIM(s.observaciones_raw)), ''),
+            s.indice_tiempo_raw,
+            s.region_destino_raw,
+            s.origen_visitantes_raw,
+            s.visitas_raw,
+            s.observaciones_raw,
             CASE
                 WHEN LTRIM(RTRIM(ISNULL(s.indice_tiempo_raw, ''))) = ''
                  AND LTRIM(RTRIM(ISNULL(s.region_destino_raw, ''))) = ''
@@ -272,10 +277,10 @@ BEGIN
         -- Detectar duplicados de clave dentro del propio archivo:
         -- se conserva la última ocurrencia y el resto se rechaza.
         ;WITH Duplicados AS (
-            SELECT id_staging,
+            SELECT row_num,
                    ROW_NUMBER() OVER (
                        PARTITION BY indice_tiempo, region_destino, origen_visitantes
-                       ORDER BY id_staging DESC
+                       ORDER BY row_num DESC
                    ) AS orden
             FROM #StagingValidado
             WHERE motivo_error IS NULL
@@ -283,7 +288,7 @@ BEGIN
         UPDATE v
         SET v.motivo_error = N'Registro duplicado dentro del archivo (se conserva la última ocurrencia con esa clave).'
         FROM #StagingValidado v
-        INNER JOIN Duplicados d ON d.id_staging = v.id_staging
+        INNER JOIN Duplicados d ON d.row_num = v.row_num
         WHERE d.orden > 1;
 
         ----------------------------------------------------------
@@ -295,13 +300,12 @@ BEGIN
         SELECT
             @v_ruta_completa,
             v.motivo_error,
-            s.indice_tiempo_raw,
-            s.region_destino_raw,
-            s.origen_visitantes_raw,
-            s.visitas_raw,
-            s.observaciones_raw
+            v.indice_tiempo_raw,
+            v.region_destino_raw,
+            v.origen_visitantes_raw,
+            v.visitas_raw,
+            v.observaciones_raw
         FROM #StagingValidado v
-        INNER JOIN estadisticas.StagingVisitantes s ON s.id_staging = v.id_staging
         WHERE v.motivo_error IS NOT NULL;
 
         SET @v_rechazados = @@ROWCOUNT;
