@@ -17,8 +17,9 @@ Descripción: Entrega 6 - Carga histórica de estadísticas de
                  registros: las cargas sucesivas insertan los
                  períodos nuevos y actualizan observaciones/
                  visitas si cambiaron para una clave existente.
-             - estadisticas.StagingVisitantes
-                 Tabla de staging usada por BULK INSERT.
+             - #StagingVisitantes (tabla temporal)
+                 Staging creado dentro del SP por BULK INSERT.
+                 Se valida en el mismo staging (una sola tabla).
              - estadisticas.ErroresImportacion
                  Registro de filas rechazadas por archivo.
              - importaciones.ImportarEstadisticasVisitantes
@@ -72,42 +73,6 @@ ELSE
     PRINT 'OK - Tabla estadisticas.VisitantesParques ya existe, se omite creación.';
 GO
 
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_VisitantesParques_IndiceTiempo')
-    CREATE INDEX IX_VisitantesParques_IndiceTiempo ON estadisticas.VisitantesParques (indice_tiempo);
-GO
-
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_VisitantesParques_Region')
-    CREATE INDEX IX_VisitantesParques_Region ON estadisticas.VisitantesParques (region_destino);
-GO
-
--- ==============================================================
--- TABLA DE STAGING: estadisticas.StagingVisitantes
--- Todas las columnas son VARCHAR para que BULK INSERT nunca
--- falle por un valor inválido: la validación de tipos/contenido
--- se realiza después, en T-SQL.
---
--- Mapeo de columnas del CSV (en orden):
---   indice_tiempo      -> indice_tiempo_raw
---   region_de_destino  -> region_destino_raw
---   origen_visitantes  -> origen_visitantes_raw
---   visitas            -> visitas_raw
---   observaciones      -> observaciones_raw
--- ==============================================================
-
-IF OBJECT_ID('estadisticas.StagingVisitantes', 'U') IS NOT NULL
-    DROP TABLE estadisticas.StagingVisitantes;
-PRINT 'Creando tabla estadisticas.StagingVisitantes...';
-CREATE TABLE estadisticas.StagingVisitantes (
-    indice_tiempo_raw     VARCHAR(30)  NULL,
-    region_destino_raw    VARCHAR(200) NULL,
-    origen_visitantes_raw VARCHAR(100) NULL,
-    visitas_raw           VARCHAR(50)  NULL,
-    observaciones_raw     VARCHAR(MAX) NULL
-);
-GO
-
-
-
 -- ==============================================================
 -- TABLA DE ERRORES: estadisticas.ErroresImportacion
 -- Guarda, por archivo importado, cada fila rechazada junto con
@@ -132,10 +97,6 @@ BEGIN
 END
 ELSE
     PRINT 'OK - Tabla estadisticas.ErroresImportacion ya existe, se omite creación.';
-GO
-
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_ErroresImportacion_Fecha')
-    CREATE INDEX IX_ErroresImportacion_Fecha ON estadisticas.ErroresImportacion (fecha_error);
 GO
 
 -- ==============================================================
@@ -175,7 +136,6 @@ BEGIN
     SET NOCOUNT ON;
     SET DATEFORMAT ymd;
 
-    -- Carpeta donde se encuentra el archivo (debe ser accesible por el servicio SQL Server)
     DECLARE @v_ruta_base     VARCHAR(500)  = 'C:\Importaciones\';
     DECLARE @v_ruta_completa VARCHAR(1000) = @v_ruta_base + @p_ruta_archivo;
     DECLARE @v_existe_archivo INT          = 0;
@@ -194,12 +154,26 @@ BEGIN
             THROW 50000, 'El archivo especificado no existe o no es accesible desde el motor de SQL Server.', 1;
 
         ----------------------------------------------------------
-        -- 2) Vaciar staging y cargar el CSV con BULK INSERT
+        -- 2) Crear tabla temporal de staging y cargar el CSV.
+        --    FORMAT='CSV' (necesario para campos entre comillas)
+        --    es incompatible con lista de columnas e incompatible
+        --    con IDENTITY en la tabla destino. Por eso la tabla
+        --    se crea solo con las 5 columnas raw (mapeo 1-a-1 con
+        --    el CSV) y las demás columnas se agregan con ALTER
+        --    TABLE, evitando así una segunda tabla temporal.
         ----------------------------------------------------------
-        TRUNCATE TABLE estadisticas.StagingVisitantes;
+        IF OBJECT_ID('tempdb..#StagingVisitantes') IS NOT NULL DROP TABLE #StagingVisitantes;
+
+        CREATE TABLE #StagingVisitantes (
+            indice_tiempo_raw     VARCHAR(30)   NULL,
+            region_destino_raw    VARCHAR(200)  NULL,
+            origen_visitantes_raw VARCHAR(100)  NULL,
+            visitas_raw           VARCHAR(50)   NULL,
+            observaciones_raw     VARCHAR(MAX)  NULL
+        );
 
         SET @v_sql = N'
-            BULK INSERT estadisticas.StagingVisitantes
+            BULK INSERT #StagingVisitantes
             FROM ''' + REPLACE(@v_ruta_completa, '''', '''''') + N'''
             WITH (
                 FORMAT          = ''CSV'',
@@ -213,97 +187,88 @@ BEGIN
 
         EXEC sp_executesql @v_sql;
 
-        ----------------------------------------------------------
-        -- 3) Validar cada fila cargada
-        ----------------------------------------------------------
-        IF OBJECT_ID('tempdb..#StagingValidado') IS NOT NULL DROP TABLE #StagingValidado;
+        ALTER TABLE #StagingVisitantes
+            ADD row_num           INT           NULL,
+                indice_tiempo     DATE          NULL,
+                region_destino    VARCHAR(100)  NULL,
+                origen_visitantes VARCHAR(50)   NULL,
+                visitas           INT           NULL,
+                observaciones     VARCHAR(500)  NULL,
+                motivo_error      VARCHAR(500)  NULL;
 
-        CREATE TABLE #StagingValidado (
-            row_num               INT          NOT NULL PRIMARY KEY,
-            indice_tiempo         DATE         NULL,
-            region_destino        VARCHAR(100) NULL,
-            origen_visitantes     VARCHAR(50)  NULL,
-            visitas               INT          NULL,
-            observaciones         VARCHAR(500) NULL,
-            indice_tiempo_raw     VARCHAR(30)  NULL,
-            region_destino_raw    VARCHAR(200) NULL,
-            origen_visitantes_raw VARCHAR(100) NULL,
-            visitas_raw           VARCHAR(50)  NULL,
-            observaciones_raw     VARCHAR(500) NULL,
-            motivo_error          VARCHAR(500) NULL
-        );
+        ----------------------------------------------------------
+        -- 3) Poblar columnas de validación
+        ----------------------------------------------------------
 
-        INSERT INTO #StagingValidado
-            (row_num, indice_tiempo, region_destino, origen_visitantes, visitas, observaciones,
-             indice_tiempo_raw, region_destino_raw, origen_visitantes_raw, visitas_raw, observaciones_raw,
-             motivo_error)
-        SELECT
-            ROW_NUMBER() OVER (ORDER BY (SELECT NULL)),
-            TRY_CAST(LTRIM(RTRIM(s.indice_tiempo_raw)) AS DATE),
-            NULLIF(LTRIM(RTRIM(s.region_destino_raw)), ''),
-            NULLIF(LTRIM(RTRIM(s.origen_visitantes_raw)), ''),
-            TRY_CAST(LTRIM(RTRIM(s.visitas_raw)) AS INT),
-            NULLIF(LTRIM(RTRIM(s.observaciones_raw)), ''),
-            s.indice_tiempo_raw,
-            s.region_destino_raw,
-            s.origen_visitantes_raw,
-            s.visitas_raw,
-            s.observaciones_raw,
-            CASE
-                WHEN LTRIM(RTRIM(ISNULL(s.indice_tiempo_raw, ''))) = ''
-                 AND LTRIM(RTRIM(ISNULL(s.region_destino_raw, ''))) = ''
-                 AND LTRIM(RTRIM(ISNULL(s.origen_visitantes_raw, ''))) = ''
-                 AND LTRIM(RTRIM(ISNULL(s.visitas_raw, ''))) = ''
+        -- Asignar número de fila (usado para dedup: conservar la última ocurrencia)
+        ;WITH Num AS (
+            SELECT row_num, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS rn
+            FROM #StagingVisitantes
+        )
+        UPDATE Num SET row_num = rn;
+
+        -- Parsear columnas tipadas (una sola vez cada TRY_CAST)
+        UPDATE #StagingVisitantes
+        SET
+            indice_tiempo     = TRY_CAST(LTRIM(RTRIM(indice_tiempo_raw)) AS DATE),
+            region_destino    = NULLIF(LTRIM(RTRIM(region_destino_raw)), ''),
+            origen_visitantes = NULLIF(LTRIM(RTRIM(origen_visitantes_raw)), ''),
+            visitas           = TRY_CAST(LTRIM(RTRIM(visitas_raw)) AS INT),
+            observaciones     = NULLIF(LTRIM(RTRIM(observaciones_raw)), '');
+
+        -- Validar usando las columnas ya computadas (sin repetir conversiones)
+        UPDATE #StagingVisitantes
+        SET motivo_error = CASE
+                WHEN LTRIM(RTRIM(ISNULL(indice_tiempo_raw, ''))) = ''
+                 AND LTRIM(RTRIM(ISNULL(region_destino_raw, ''))) = ''
+                 AND LTRIM(RTRIM(ISNULL(origen_visitantes_raw, ''))) = ''
+                 AND LTRIM(RTRIM(ISNULL(visitas_raw, ''))) = ''
                     THEN N'Fila vacía o con columnas faltantes.'
-                WHEN TRY_CAST(LTRIM(RTRIM(s.indice_tiempo_raw)) AS DATE) IS NULL
+                WHEN indice_tiempo IS NULL
                     THEN N'La fecha (indice_tiempo) es inválida o está vacía.'
-                WHEN LTRIM(RTRIM(ISNULL(s.region_destino_raw, ''))) = ''
+                WHEN region_destino IS NULL
                     THEN N'La región de destino es nula o vacía.'
-                WHEN LTRIM(RTRIM(ISNULL(s.origen_visitantes_raw, ''))) = ''
+                WHEN origen_visitantes IS NULL
                     THEN N'El origen de visitantes es nulo o vacío.'
-                WHEN LTRIM(RTRIM(ISNULL(s.visitas_raw, ''))) = ''
-                    THEN N'La cantidad de visitas es nula o vacía.'
-                WHEN TRY_CAST(LTRIM(RTRIM(s.visitas_raw)) AS INT) IS NULL
-                    THEN N'La cantidad de visitas no es un valor numérico válido.'
-                WHEN TRY_CAST(LTRIM(RTRIM(s.visitas_raw)) AS INT) < 0
+                WHEN visitas IS NULL
+                    THEN N'La cantidad de visitas es nula, vacía o no es un valor numérico válido.'
+                WHEN visitas < 0
                     THEN N'La cantidad de visitas no puede ser negativa.'
                 ELSE NULL
-            END
-        FROM estadisticas.StagingVisitantes s;
+            END;
 
-        -- Detectar duplicados de clave dentro del propio archivo:
-        -- se conserva la última ocurrencia y el resto se rechaza.
+        -- Marcar duplicados dentro del archivo: conservar la última ocurrencia
         ;WITH Duplicados AS (
             SELECT row_num,
                    ROW_NUMBER() OVER (
                        PARTITION BY indice_tiempo, region_destino, origen_visitantes
                        ORDER BY row_num DESC
                    ) AS orden
-            FROM #StagingValidado
+            FROM #StagingVisitantes
             WHERE motivo_error IS NULL
         )
-        UPDATE v
-        SET v.motivo_error = N'Registro duplicado dentro del archivo (se conserva la última ocurrencia con esa clave).'
-        FROM #StagingValidado v
-        INNER JOIN Duplicados d ON d.row_num = v.row_num
+        UPDATE s
+        SET s.motivo_error = N'Registro duplicado dentro del archivo (se conserva la última ocurrencia con esa clave).'
+        FROM #StagingVisitantes s
+        INNER JOIN Duplicados d ON d.row_num = s.row_num
         WHERE d.orden > 1;
 
         ----------------------------------------------------------
-        -- 4) Registrar filas rechazadas con sus valores originales
+        -- 4) Registrar filas rechazadas
         ----------------------------------------------------------
         INSERT INTO estadisticas.ErroresImportacion
             (archivo_origen, motivo_error, indice_tiempo_valor, region_destino_valor,
              origen_visitantes_valor, visitas_valor, observaciones_valor)
         SELECT
             @v_ruta_completa,
-            v.motivo_error,
-            v.indice_tiempo_raw,
-            v.region_destino_raw,
-            v.origen_visitantes_raw,
-            v.visitas_raw,
-            v.observaciones_raw
-        FROM #StagingValidado v
-        WHERE v.motivo_error IS NOT NULL;
+            motivo_error,
+            indice_tiempo_raw,
+            region_destino_raw,
+            origen_visitantes_raw,
+            visitas_raw,
+            observaciones_raw
+        FROM #StagingVisitantes
+        WHERE motivo_error IS NOT NULL;
 
         SET @v_rechazados = @@ROWCOUNT;
 
@@ -314,18 +279,18 @@ BEGIN
 
         -- 5a) Actualizar registros existentes cuyos datos cambiaron
         UPDATE dest
-        SET dest.visitas             = v.visitas,
-            dest.observaciones        = v.observaciones,
-            dest.fecha_actualizacion  = SYSDATETIME()
+        SET dest.visitas            = s.visitas,
+            dest.observaciones      = s.observaciones,
+            dest.fecha_actualizacion = SYSDATETIME()
         FROM estadisticas.VisitantesParques dest
-        INNER JOIN #StagingValidado v
-            ON v.indice_tiempo     = dest.indice_tiempo
-           AND v.region_destino    = dest.region_destino
-           AND v.origen_visitantes = dest.origen_visitantes
-        WHERE v.motivo_error IS NULL
+        INNER JOIN #StagingVisitantes s
+            ON s.indice_tiempo     = dest.indice_tiempo
+           AND s.region_destino    = dest.region_destino
+           AND s.origen_visitantes = dest.origen_visitantes
+        WHERE s.motivo_error IS NULL
           AND (
-                dest.visitas <> v.visitas
-             OR ISNULL(dest.observaciones, N'') <> ISNULL(v.observaciones, N'')
+                dest.visitas <> s.visitas
+             OR ISNULL(dest.observaciones, N'') <> ISNULL(s.observaciones, N'')
               );
 
         SET @v_actualizados = @@ROWCOUNT;
@@ -333,15 +298,14 @@ BEGIN
         -- 5b) Insertar claves nuevas
         INSERT INTO estadisticas.VisitantesParques
             (indice_tiempo, region_destino, origen_visitantes, visitas, observaciones)
-        SELECT
-            v.indice_tiempo, v.region_destino, v.origen_visitantes, v.visitas, v.observaciones
-        FROM #StagingValidado v
-        WHERE v.motivo_error IS NULL
+        SELECT s.indice_tiempo, s.region_destino, s.origen_visitantes, s.visitas, s.observaciones
+        FROM #StagingVisitantes s
+        WHERE s.motivo_error IS NULL
           AND NOT EXISTS (
               SELECT 1 FROM estadisticas.VisitantesParques dest
-              WHERE dest.indice_tiempo     = v.indice_tiempo
-                AND dest.region_destino    = v.region_destino
-                AND dest.origen_visitantes = v.origen_visitantes
+              WHERE dest.indice_tiempo     = s.indice_tiempo
+                AND dest.region_destino    = s.region_destino
+                AND dest.origen_visitantes = s.origen_visitantes
           );
 
         SET @v_insertados = @@ROWCOUNT;
@@ -349,10 +313,9 @@ BEGIN
         COMMIT TRANSACTION;
 
         ----------------------------------------------------------
-        -- 6) Limpieza de staging y resultado
+        -- 6) Limpieza y resultado
         ----------------------------------------------------------
-        TRUNCATE TABLE estadisticas.StagingVisitantes;
-        DROP TABLE #StagingValidado;
+        DROP TABLE #StagingVisitantes;
 
         SELECT
             @v_insertados   AS registros_insertados,
@@ -361,10 +324,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
-
-        TRUNCATE TABLE estadisticas.StagingVisitantes;
-        IF OBJECT_ID('tempdb..#StagingValidado') IS NOT NULL DROP TABLE #StagingValidado;
-
+        IF OBJECT_ID('tempdb..#StagingVisitantes') IS NOT NULL DROP TABLE #StagingVisitantes;
         THROW;
     END CATCH
 END
