@@ -15,12 +15,13 @@ Descripción: Entrega 6 - Carga de organizaciones distinguidas
                  cargas sucesivas insertan organizaciones nuevas
                  y actualizan los datos de contacto/programa
                  si cambiaron para una clave existente.
-             - estadisticas.StagingOrganizaciones
-                 Tabla de staging usada por BULK INSERT. El INSERT
-                 especifica la lista de columnas para saltear el
-                 IDENTITY y cargar directamente sobre la tabla.
+             - #StagingOrganizaciones (tabla temporal)
+                 Staging creado dentro del SP. Solo columnas raw
+                 (mapeo 1-a-1 con el CSV); las columnas tipadas y
+                 motivo_error se agregan con ALTER TABLE, evitando
+                 una segunda tabla temporal.
              - Reutiliza estadisticas.ErroresImportacion
-                 (creada en 04-ScriptEstadisticasVisitantes.sql).
+                 (creada en 01-ScriptCreacionTablasYSchemas.sql).
              - importaciones.ImportarOrganizacionesDistinguidas
                  Procedimiento que realiza toda la carga,
                  validación y upsert (sin MERGE).
@@ -74,85 +75,23 @@ IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_OrganizacionesDistingu
 GO
 
 -- ==============================================================
--- TABLA DE STAGING: estadisticas.StagingOrganizaciones
--- Todas las columnas son VARCHAR para que BULK INSERT nunca
--- falle por un valor inválido.
---
--- Mapeo de columnas del CSV (en orden):
---   organizacion       -> organizacion_raw
---   rubro              -> rubro_raw
---   subrubro           -> subrubro_raw
---   calle              -> calle_raw
---   numero             -> numero_raw
---   pais               -> pais_raw
---   provincia          -> provincia_raw
---   ciudad             -> ciudad_raw
---   telefono           -> telefono_raw
---   facebook           -> facebook_raw
---   web                -> web_raw
---   programa           -> programa_raw
---   fecha_distincion   -> fecha_distincion_raw
---   fecha_revalidacion -> fecha_revalidacion_raw
--- ==============================================================
-
-IF OBJECT_ID('estadisticas.StagingOrganizaciones', 'U') IS NOT NULL
-    DROP TABLE estadisticas.StagingOrganizaciones;
-PRINT 'Creando tabla estadisticas.StagingOrganizaciones...';
-CREATE TABLE estadisticas.StagingOrganizaciones (
-    organizacion_raw       VARCHAR(300) NULL,
-    rubro_raw              VARCHAR(200) NULL,
-    subrubro_raw           VARCHAR(200) NULL,
-    calle_raw              VARCHAR(300) NULL,
-    numero_raw             VARCHAR(100) NULL,
-    pais_raw               VARCHAR(200) NULL,
-    provincia_raw          VARCHAR(200) NULL,
-    ciudad_raw             VARCHAR(200) NULL,
-    telefono_raw           VARCHAR(200) NULL,
-    facebook_raw           VARCHAR(300) NULL,
-    web_raw                VARCHAR(300) NULL,
-    programa_raw           VARCHAR(300) NULL,
-    fecha_distincion_raw   VARCHAR(50)  NULL,
-    fecha_revalidacion_raw VARCHAR(50)  NULL
-);
-GO
-
--- Ampliar columnas de ErroresImportacion para que quepan valores
--- más largos provenientes de otros datasets (organizaciones, etc.)
-IF COL_LENGTH('estadisticas.ErroresImportacion', 'indice_tiempo_valor') < 500
-    ALTER TABLE estadisticas.ErroresImportacion
-        ALTER COLUMN indice_tiempo_valor VARCHAR(500) NULL;
-GO
-IF COL_LENGTH('estadisticas.ErroresImportacion', 'region_destino_valor') < 500
-    ALTER TABLE estadisticas.ErroresImportacion
-        ALTER COLUMN region_destino_valor VARCHAR(500) NULL;
-GO
-IF COL_LENGTH('estadisticas.ErroresImportacion', 'origen_visitantes_valor') < 500
-    ALTER TABLE estadisticas.ErroresImportacion
-        ALTER COLUMN origen_visitantes_valor VARCHAR(500) NULL;
-GO
-IF COL_LENGTH('estadisticas.ErroresImportacion', 'visitas_valor') < 500
-    ALTER TABLE estadisticas.ErroresImportacion
-        ALTER COLUMN visitas_valor VARCHAR(500) NULL;
-GO
-
-IF OBJECT_ID('estadisticas.StagingOrganizacionesImport', 'V') IS NOT NULL
-    DROP VIEW estadisticas.StagingOrganizacionesImport;
-GO
-
--- ==============================================================
 -- importaciones.ImportarOrganizacionesDistinguidas
 --
 -- Importa el CSV indicado en @p_ruta_archivo:
 --   1. Valida que el archivo exista.
---   2. Vacía el staging y carga el CSV con BULK INSERT.
---   3. Valida cada fila y detecta duplicados dentro del archivo.
---   4. Filas inválidas -> estadisticas.ErroresImportacion.
---   5. Upsert sin MERGE sobre OrganizacionesDistinguidas
+--   2. Crea la tabla temporal #StagingOrganizaciones con las 14
+--      columnas raw y carga el CSV con BULK INSERT (SQL dinámico
+--      porque BULK INSERT no admite variables en FROM).
+--   3. Agrega columnas tipadas + motivo_error con ALTER TABLE.
+--   4. Parsea columnas tipadas (un solo NULLIF/TRY_CAST por col).
+--   5. Valida usando las columnas ya computadas y detecta
+--      duplicados dentro del archivo.
+--   6. Filas inválidas -> estadisticas.ErroresImportacion.
+--   7. Upsert sin MERGE sobre OrganizacionesDistinguidas
 --      (clave: organizacion + calle + numero):
---      inserta filas nuevas y actualiza datos de contacto y
---      programa cuando cambiaron. Nunca elimina filas.
---   6. Vacía el staging al finalizar (incluso si hubo error).
---   7. Devuelve registros_insertados, actualizados y rechazados.
+--      inserta filas nuevas y actualiza datos cuando cambiaron.
+--      Nunca elimina filas.
+--   8. Devuelve registros_insertados, actualizados y rechazados.
 -- ==============================================================
 
 IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('importaciones.ImportarOrganizacionesDistinguidas') AND type = 'P')
@@ -186,12 +125,33 @@ BEGIN
             THROW 50000, 'El archivo especificado no existe o no es accesible desde el motor de SQL Server.', 1;
 
         ----------------------------------------------------------
-        -- 2) Vaciar staging y cargar el CSV con BULK INSERT
+        -- 2) Crear tabla temporal de staging y cargar el CSV.
+        --    Solo columnas raw (mapeo 1-a-1 con el CSV); las
+        --    columnas tipadas y motivo_error se agregan luego
+        --    con ALTER TABLE, siguiendo el mismo patrón que
+        --    ImportarEstadisticasVisitantes.
         ----------------------------------------------------------
-        TRUNCATE TABLE estadisticas.StagingOrganizaciones;
+        IF OBJECT_ID('tempdb..#StagingOrganizaciones') IS NOT NULL DROP TABLE #StagingOrganizaciones;
+
+        CREATE TABLE #StagingOrganizaciones (
+            organizacion_raw       VARCHAR(300) NULL,
+            rubro_raw              VARCHAR(200) NULL,
+            subrubro_raw           VARCHAR(200) NULL,
+            calle_raw              VARCHAR(300) NULL,
+            numero_raw             VARCHAR(100) NULL,
+            pais_raw               VARCHAR(200) NULL,
+            provincia_raw          VARCHAR(200) NULL,
+            ciudad_raw             VARCHAR(200) NULL,
+            telefono_raw           VARCHAR(200) NULL,
+            facebook_raw           VARCHAR(300) NULL,
+            web_raw                VARCHAR(300) NULL,
+            programa_raw           VARCHAR(300) NULL,
+            fecha_distincion_raw   VARCHAR(50)  NULL,
+            fecha_revalidacion_raw VARCHAR(50)  NULL
+        );
 
         SET @v_sql = N'
-            BULK INSERT estadisticas.StagingOrganizaciones
+            BULK INSERT #StagingOrganizaciones
             FROM ''' + REPLACE(@v_ruta_completa, '''', '''''') + N'''
             WITH (
                 FIELDTERMINATOR = '','',
@@ -203,108 +163,101 @@ BEGIN
 
         EXEC sp_executesql @v_sql;
 
-        ----------------------------------------------------------
-        -- 3) Validar cada fila cargada
-        ----------------------------------------------------------
-        IF OBJECT_ID('tempdb..#OrgValidado') IS NOT NULL DROP TABLE #OrgValidado;
+        ALTER TABLE #StagingOrganizaciones
+            ADD row_num            INT           NULL,
+                organizacion       VARCHAR(200)  NULL,
+                rubro              VARCHAR(100)  NULL,
+                subrubro           VARCHAR(100)  NULL,
+                calle              VARCHAR(200)  NULL,
+                numero             VARCHAR(50)   NULL,
+                pais               VARCHAR(100)  NULL,
+                provincia          VARCHAR(100)  NULL,
+                ciudad             VARCHAR(100)  NULL,
+                telefono           VARCHAR(100)  NULL,
+                facebook           VARCHAR(200)  NULL,
+                web                VARCHAR(200)  NULL,
+                programa           VARCHAR(200)  NULL,
+                fecha_distincion   DATE          NULL,
+                fecha_revalidacion DATE          NULL,
+                motivo_error       VARCHAR(500)  NULL;
 
-        CREATE TABLE #OrgValidado (
-            row_num              INT           NOT NULL PRIMARY KEY,
-            organizacion_raw     VARCHAR(300)  NULL,
-            rubro_raw            VARCHAR(200)  NULL,
-            calle_raw            VARCHAR(300)  NULL,
-            numero_raw           VARCHAR(100)  NULL,
-            fecha_distincion_raw VARCHAR(50)   NULL,
-            organizacion         VARCHAR(200)  NULL,
-            rubro                VARCHAR(100)  NULL,
-            subrubro             VARCHAR(100)  NULL,
-            calle                VARCHAR(200)  NULL,
-            numero               VARCHAR(50)   NULL,
-            pais                 VARCHAR(100)  NULL,
-            provincia            VARCHAR(100)  NULL,
-            ciudad               VARCHAR(100)  NULL,
-            telefono             VARCHAR(100)  NULL,
-            facebook             VARCHAR(200)  NULL,
-            web                  VARCHAR(200)  NULL,
-            programa             VARCHAR(200)  NULL,
-            fecha_distincion     DATE          NULL,
-            fecha_revalidacion   DATE          NULL,
-            motivo_error         VARCHAR(500)  NULL
-        );
+        ----------------------------------------------------------
+        -- 3) Poblar columnas de validación
+        ----------------------------------------------------------
 
-        INSERT INTO #OrgValidado
-            (row_num, organizacion_raw, rubro_raw, calle_raw, numero_raw, fecha_distincion_raw,
-             organizacion, rubro, subrubro, calle, numero, pais, provincia,
-             ciudad, telefono, facebook, web, programa, fecha_distincion,
-             fecha_revalidacion, motivo_error)
-        SELECT
-            ROW_NUMBER() OVER (ORDER BY (SELECT NULL)),
-            s.organizacion_raw,
-            s.rubro_raw,
-            s.calle_raw,
-            s.numero_raw,
-            s.fecha_distincion_raw,
-            NULLIF(LTRIM(RTRIM(s.organizacion_raw)), ''),
-            NULLIF(LTRIM(RTRIM(s.rubro_raw)), ''),
-            NULLIF(LTRIM(RTRIM(s.subrubro_raw)), ''),
-            NULLIF(LTRIM(RTRIM(s.calle_raw)), ''),
-            NULLIF(LTRIM(RTRIM(s.numero_raw)), ''),
-            NULLIF(LTRIM(RTRIM(s.pais_raw)), ''),
-            NULLIF(LTRIM(RTRIM(s.provincia_raw)), ''),
-            NULLIF(LTRIM(RTRIM(s.ciudad_raw)), ''),
-            NULLIF(LTRIM(RTRIM(s.telefono_raw)), ''),
-            NULLIF(LTRIM(RTRIM(s.facebook_raw)), ''),
-            NULLIF(LTRIM(RTRIM(s.web_raw)), ''),
-            NULLIF(LTRIM(RTRIM(s.programa_raw)), ''),
-            TRY_CAST(LTRIM(RTRIM(REPLACE(s.fecha_distincion_raw,   CHAR(13), ''))) AS DATE),
-            TRY_CAST(LTRIM(RTRIM(REPLACE(s.fecha_revalidacion_raw, CHAR(13), ''))) AS DATE),
-            CASE
-                WHEN LTRIM(RTRIM(ISNULL(s.organizacion_raw, ''))) = ''
+        -- Asignar número de fila
+        ;WITH Num AS (
+            SELECT row_num, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS rn
+            FROM #StagingOrganizaciones
+        )
+        UPDATE Num SET row_num = rn;
+
+        -- Parsear columnas tipadas (una sola vez cada conversión)
+        UPDATE #StagingOrganizaciones
+        SET
+            organizacion       = NULLIF(LTRIM(RTRIM(organizacion_raw)), ''),
+            rubro              = NULLIF(LTRIM(RTRIM(rubro_raw)), ''),
+            subrubro           = NULLIF(LTRIM(RTRIM(subrubro_raw)), ''),
+            calle              = NULLIF(LTRIM(RTRIM(calle_raw)), ''),
+            numero             = NULLIF(LTRIM(RTRIM(numero_raw)), ''),
+            pais               = NULLIF(LTRIM(RTRIM(pais_raw)), ''),
+            provincia          = NULLIF(LTRIM(RTRIM(provincia_raw)), ''),
+            ciudad             = NULLIF(LTRIM(RTRIM(ciudad_raw)), ''),
+            telefono           = NULLIF(LTRIM(RTRIM(telefono_raw)), ''),
+            facebook           = NULLIF(LTRIM(RTRIM(facebook_raw)), ''),
+            web                = NULLIF(LTRIM(RTRIM(web_raw)), ''),
+            programa           = NULLIF(LTRIM(RTRIM(programa_raw)), ''),
+            fecha_distincion   = TRY_CAST(LTRIM(RTRIM(REPLACE(fecha_distincion_raw,   CHAR(13), ''))) AS DATE),
+            fecha_revalidacion = TRY_CAST(LTRIM(RTRIM(REPLACE(fecha_revalidacion_raw, CHAR(13), ''))) AS DATE);
+
+        -- Validar usando las columnas ya computadas (sin repetir conversiones)
+        UPDATE #StagingOrganizaciones
+        SET motivo_error = CASE
+                WHEN organizacion IS NULL
                     THEN N'El nombre de la organización es nulo o vacío.'
-                WHEN LTRIM(RTRIM(ISNULL(s.rubro_raw, ''))) = ''
+                WHEN rubro IS NULL
                     THEN N'El rubro es nulo o vacío.'
-                WHEN LTRIM(RTRIM(REPLACE(ISNULL(s.fecha_distincion_raw, ''),   CHAR(13), ''))) <> ''
-                 AND TRY_CAST(LTRIM(RTRIM(REPLACE(s.fecha_distincion_raw,   CHAR(13), ''))) AS DATE) IS NULL
+                WHEN LTRIM(RTRIM(REPLACE(ISNULL(fecha_distincion_raw, ''), CHAR(13), ''))) <> ''
+                 AND fecha_distincion IS NULL
                     THEN N'La fecha de distinción es inválida.'
-                WHEN LTRIM(RTRIM(REPLACE(ISNULL(s.fecha_revalidacion_raw, ''), CHAR(13), ''))) <> ''
-                 AND TRY_CAST(LTRIM(RTRIM(REPLACE(s.fecha_revalidacion_raw, CHAR(13), ''))) AS DATE) IS NULL
+                WHEN LTRIM(RTRIM(REPLACE(ISNULL(fecha_revalidacion_raw, ''), CHAR(13), ''))) <> ''
+                 AND fecha_revalidacion IS NULL
                     THEN N'La fecha de revalidación es inválida.'
                 ELSE NULL
-            END
-        FROM estadisticas.StagingOrganizaciones s;
+            END;
 
-        -- Detectar duplicados de clave dentro del propio archivo
+        -- Marcar duplicados dentro del archivo: conservar la última ocurrencia
         ;WITH Duplicados AS (
             SELECT row_num,
                    ROW_NUMBER() OVER (
                        PARTITION BY organizacion, calle, numero
                        ORDER BY row_num DESC
                    ) AS orden
-            FROM #OrgValidado
+            FROM #StagingOrganizaciones
             WHERE motivo_error IS NULL
         )
-        UPDATE v
-        SET v.motivo_error = N'Registro duplicado dentro del archivo (se conserva la última ocurrencia con esa clave).'
-        FROM #OrgValidado v
-        INNER JOIN Duplicados d ON d.row_num = v.row_num
+        UPDATE s
+        SET s.motivo_error = N'Registro duplicado dentro del archivo (se conserva la última ocurrencia con esa clave).'
+        FROM #StagingOrganizaciones s
+        INNER JOIN Duplicados d ON d.row_num = s.row_num
         WHERE d.orden > 1;
 
         ----------------------------------------------------------
-        -- 4) Registrar filas rechazadas con sus valores originales
+        -- 4) Registrar filas rechazadas
         ----------------------------------------------------------
         INSERT INTO estadisticas.ErroresImportacion
             (archivo_origen, motivo_error, indice_tiempo_valor, region_destino_valor,
              origen_visitantes_valor, visitas_valor, observaciones_valor)
         SELECT
             @v_ruta_completa,
-            v.motivo_error,
-            v.organizacion_raw,
-            v.rubro_raw,
-            v.calle_raw,
-            v.numero_raw,
-            v.fecha_distincion_raw
-        FROM #OrgValidado v
-        WHERE v.motivo_error IS NOT NULL;
+            s.motivo_error,
+            s.organizacion_raw,
+            s.rubro_raw,
+            s.calle_raw,
+            s.numero_raw,
+            s.fecha_distincion_raw
+        FROM #StagingOrganizaciones s
+        WHERE s.motivo_error IS NOT NULL;
 
         SET @v_rechazados = @@ROWCOUNT;
 
@@ -315,38 +268,38 @@ BEGIN
 
         -- 5a) Actualizar registros existentes cuyos datos cambiaron
         UPDATE dest
-        SET dest.rubro              = v.rubro,
-            dest.subrubro           = v.subrubro,
-            dest.pais               = v.pais,
-            dest.provincia          = v.provincia,
-            dest.ciudad             = v.ciudad,
-            dest.telefono           = v.telefono,
-            dest.facebook           = v.facebook,
-            dest.web                = v.web,
-            dest.programa           = v.programa,
-            dest.fecha_distincion   = v.fecha_distincion,
-            dest.fecha_revalidacion = v.fecha_revalidacion,
+        SET dest.rubro               = s.rubro,
+            dest.subrubro            = s.subrubro,
+            dest.pais                = s.pais,
+            dest.provincia           = s.provincia,
+            dest.ciudad              = s.ciudad,
+            dest.telefono            = s.telefono,
+            dest.facebook            = s.facebook,
+            dest.web                 = s.web,
+            dest.programa            = s.programa,
+            dest.fecha_distincion    = s.fecha_distincion,
+            dest.fecha_revalidacion  = s.fecha_revalidacion,
             dest.fecha_actualizacion = SYSDATETIME()
         FROM estadisticas.OrganizacionesDistinguidas dest
-        INNER JOIN #OrgValidado v
-            ON v.organizacion = dest.organizacion
-           AND ISNULL(v.calle, '')  = ISNULL(dest.calle, '')
-           AND ISNULL(v.numero, '') = ISNULL(dest.numero, '')
-        WHERE v.motivo_error IS NULL
+        INNER JOIN #StagingOrganizaciones s
+            ON  s.organizacion       = dest.organizacion
+           AND ISNULL(s.calle, '')   = ISNULL(dest.calle, '')
+           AND ISNULL(s.numero, '')  = ISNULL(dest.numero, '')
+        WHERE s.motivo_error IS NULL
           AND (
-                ISNULL(dest.rubro, '')              <> ISNULL(v.rubro, '')
-             OR ISNULL(dest.subrubro, '')           <> ISNULL(v.subrubro, '')
-             OR ISNULL(dest.pais, '')               <> ISNULL(v.pais, '')
-             OR ISNULL(dest.provincia, '')          <> ISNULL(v.provincia, '')
-             OR ISNULL(dest.ciudad, '')             <> ISNULL(v.ciudad, '')
-             OR ISNULL(dest.telefono, '')           <> ISNULL(v.telefono, '')
-             OR ISNULL(dest.facebook, '')           <> ISNULL(v.facebook, '')
-             OR ISNULL(dest.web, '')                <> ISNULL(v.web, '')
-             OR ISNULL(dest.programa, '')           <> ISNULL(v.programa, '')
-             OR ISNULL(CAST(dest.fecha_distincion AS VARCHAR(20)), '')
-                <> ISNULL(CAST(v.fecha_distincion AS VARCHAR(20)), '')
+                ISNULL(dest.rubro, '')     <> ISNULL(s.rubro, '')
+             OR ISNULL(dest.subrubro, '')  <> ISNULL(s.subrubro, '')
+             OR ISNULL(dest.pais, '')      <> ISNULL(s.pais, '')
+             OR ISNULL(dest.provincia, '') <> ISNULL(s.provincia, '')
+             OR ISNULL(dest.ciudad, '')    <> ISNULL(s.ciudad, '')
+             OR ISNULL(dest.telefono, '')  <> ISNULL(s.telefono, '')
+             OR ISNULL(dest.facebook, '')  <> ISNULL(s.facebook, '')
+             OR ISNULL(dest.web, '')       <> ISNULL(s.web, '')
+             OR ISNULL(dest.programa, '')  <> ISNULL(s.programa, '')
+             OR ISNULL(CAST(dest.fecha_distincion   AS VARCHAR(20)), '')
+                <> ISNULL(CAST(s.fecha_distincion   AS VARCHAR(20)), '')
              OR ISNULL(CAST(dest.fecha_revalidacion AS VARCHAR(20)), '')
-                <> ISNULL(CAST(v.fecha_revalidacion AS VARCHAR(20)), '')
+                <> ISNULL(CAST(s.fecha_revalidacion AS VARCHAR(20)), '')
               );
 
         SET @v_actualizados = @@ROWCOUNT;
@@ -356,16 +309,16 @@ BEGIN
             (organizacion, rubro, subrubro, calle, numero, pais, provincia, ciudad,
              telefono, facebook, web, programa, fecha_distincion, fecha_revalidacion)
         SELECT
-            v.organizacion, v.rubro, v.subrubro, v.calle, v.numero, v.pais,
-            v.provincia, v.ciudad, v.telefono, v.facebook, v.web, v.programa,
-            v.fecha_distincion, v.fecha_revalidacion
-        FROM #OrgValidado v
-        WHERE v.motivo_error IS NULL
+            s.organizacion, s.rubro, s.subrubro, s.calle, s.numero, s.pais,
+            s.provincia, s.ciudad, s.telefono, s.facebook, s.web, s.programa,
+            s.fecha_distincion, s.fecha_revalidacion
+        FROM #StagingOrganizaciones s
+        WHERE s.motivo_error IS NULL
           AND NOT EXISTS (
               SELECT 1 FROM estadisticas.OrganizacionesDistinguidas dest
-              WHERE dest.organizacion      = v.organizacion
-                AND ISNULL(dest.calle, '')  = ISNULL(v.calle, '')
-                AND ISNULL(dest.numero, '') = ISNULL(v.numero, '')
+              WHERE dest.organizacion      = s.organizacion
+                AND ISNULL(dest.calle, '')  = ISNULL(s.calle, '')
+                AND ISNULL(dest.numero, '') = ISNULL(s.numero, '')
           );
 
         SET @v_insertados = @@ROWCOUNT;
@@ -373,10 +326,9 @@ BEGIN
         COMMIT TRANSACTION;
 
         ----------------------------------------------------------
-        -- 6) Limpieza de staging y resultado
+        -- 6) Limpieza y resultado
         ----------------------------------------------------------
-        TRUNCATE TABLE estadisticas.StagingOrganizaciones;
-        DROP TABLE #OrgValidado;
+        DROP TABLE #StagingOrganizaciones;
 
         SELECT
             @v_insertados   AS registros_insertados,
@@ -385,10 +337,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
-
-        TRUNCATE TABLE estadisticas.StagingOrganizaciones;
-        IF OBJECT_ID('tempdb..#OrgValidado') IS NOT NULL DROP TABLE #OrgValidado;
-
+        IF OBJECT_ID('tempdb..#StagingOrganizaciones') IS NOT NULL DROP TABLE #StagingOrganizaciones;
         THROW;
     END CATCH
 END
