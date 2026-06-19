@@ -10,103 +10,21 @@ Descripción: Entrega 6 - Carga de áreas protegidas por jurisdicción
              (areas-protegidas-por-jurisdiccion.json).
 
              Contenido:
-             - estadisticas.AreasProtegidasJurisdiccion
-                 Tabla destino. No se eliminan registros: las
-                 cargas sucesivas insertan jurisdicciones nuevas
-                 y actualizan los datos si cambiaron para una
-                 clave existente.
-             - estadisticas.ErroresImportacion
-                 Tabla compartida de errores (se crea aquí si no
-                 existe; también la crea 04-ScriptEstadisticasVisitantes.sql).
              - importaciones.ImportarAreasProtegidas
                  Procedimiento que realiza toda la carga,
                  validación y upsert (sin MERGE).
 
+             Nota: Los schemas 'estadisticas' e 'importaciones',
+             las tablas estadisticas.AreasProtegidasJurisdiccion y
+             estadisticas.ErroresImportacion se crean en
+             01-ScriptCreacionTablasYSchemas.sql.
+
              Clave de unicidad / upsert:
                  jurisdiccion
-
-             Orden de ejecución:
-               1. 01-ScriptCreacionTablasYSchemas.sql
-               2. 02-ScriptABM_SPs.sql
-               3. 03-ScriptLogicaNegocio_SPs.sql
-               4. Este script (puede ejecutarse sin necesidad de 04)
 ==============================================================
 */
 
 USE ParquesNacionalesDB;
-GO
-
--- ==============================================================
--- SCHEMAS
--- ==============================================================
-
-IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'estadisticas')
-    EXEC('CREATE SCHEMA estadisticas;');
-GO
-
-IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'importaciones')
-    EXEC('CREATE SCHEMA importaciones;');
-GO
-
--- ==============================================================
--- TABLA COMPARTIDA DE ERRORES: estadisticas.ErroresImportacion
--- Se crea aquí si no fue creada por 04-ScriptEstadisticasVisitantes.sql
--- ==============================================================
-
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ErroresImportacion' AND schema_id = SCHEMA_ID('estadisticas'))
-BEGIN
-    PRINT 'Creando tabla estadisticas.ErroresImportacion...';
-    CREATE TABLE estadisticas.ErroresImportacion (
-        id_error                INT IDENTITY(1,1) PRIMARY KEY,
-        fecha_error             DATETIME2    NOT NULL CONSTRAINT DF_ErroresImportacion_Fecha DEFAULT (SYSDATETIME()),
-        archivo_origen          VARCHAR(500) NULL,
-        motivo_error            VARCHAR(500) NOT NULL,
-        indice_tiempo_valor     VARCHAR(500) NULL,
-        region_destino_valor    VARCHAR(500) NULL,
-        origen_visitantes_valor VARCHAR(500) NULL,
-        visitas_valor           VARCHAR(500) NULL,
-        observaciones_valor     VARCHAR(500) NULL
-    );
-END
-ELSE
-    PRINT 'OK - Tabla estadisticas.ErroresImportacion ya existe, se omite creación.';
-GO
-
--- ==============================================================
--- TABLA DESTINO: estadisticas.AreasProtegidasJurisdiccion
--- ==============================================================
-
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'AreasProtegidasJurisdiccion' AND schema_id = SCHEMA_ID('estadisticas'))
-BEGIN
-    PRINT 'Creando tabla estadisticas.AreasProtegidasJurisdiccion...';
-    CREATE TABLE estadisticas.AreasProtegidasJurisdiccion (
-        id_area                        INT IDENTITY(1,1) PRIMARY KEY,
-        jurisdiccion                   NVARCHAR(100) NOT NULL,
-        total_cantidad                 INT           NULL,
-        ap_nac                         INT           NULL,
-        ap_prov                        INT           NULL,
-        ap_desig_inter                 INT           NULL,
-        total_ha                       INT           NULL,
-        terrestre_ha                   INT           NULL,
-        marino_ha                      INT           NULL,
-        porcentaje_terrestre_protegido DECIMAL(6,2)  NULL,
-        fecha_carga                    DATETIME2     NOT NULL CONSTRAINT DF_AreasProtegidas_FechaCarga DEFAULT (SYSDATETIME()),
-        fecha_actualizacion            DATETIME2     NULL,
-        CONSTRAINT UQ_AreasProtegidas_Jurisdiccion UNIQUE (jurisdiccion)
-    );
-END
-ELSE
-    PRINT 'OK - Tabla estadisticas.AreasProtegidasJurisdiccion ya existe, se omite creación.';
-GO
-
-IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('estadisticas.AreasProtegidasJurisdiccion') AND name = 'fecha_carga')
-    ALTER TABLE estadisticas.AreasProtegidasJurisdiccion
-        ADD fecha_carga DATETIME2 NOT NULL CONSTRAINT DF_AreasProtegidas_FechaCarga DEFAULT (SYSDATETIME());
-GO
-
-IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('estadisticas.AreasProtegidasJurisdiccion') AND name = 'fecha_actualizacion')
-    ALTER TABLE estadisticas.AreasProtegidasJurisdiccion
-        ADD fecha_actualizacion DATETIME2 NULL;
 GO
 
 -- ==============================================================

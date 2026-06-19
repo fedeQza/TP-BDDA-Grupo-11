@@ -477,3 +477,33 @@ GO
 
 IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_OrganizacionesDistinguidas_Rubro')
     CREATE INDEX IX_OrganizacionesDistinguidas_Rubro ON estadisticas.OrganizacionesDistinguidas (rubro);
+GO
+
+-- ==============================================================
+-- SCHEMA: estadisticas  |  TABLA: AreasProtegidasJurisdiccion
+-- Superficie y cantidad de áreas protegidas por jurisdicción.
+-- El SP de importación inserta jurisdicciones nuevas y actualiza
+-- datos cuando cambiaron; nunca elimina filas.
+-- ==============================================================
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'AreasProtegidasJurisdiccion' AND schema_id = SCHEMA_ID('estadisticas'))
+BEGIN
+    PRINT 'Creando tabla estadisticas.AreasProtegidasJurisdiccion...';
+    CREATE TABLE estadisticas.AreasProtegidasJurisdiccion (
+        id_area                        INT IDENTITY(1,1) PRIMARY KEY,
+        jurisdiccion                   NVARCHAR(100) NOT NULL,
+        total_cantidad                 INT           NULL,
+        ap_nac                         INT           NULL,
+        ap_prov                        INT           NULL,
+        ap_desig_inter                 INT           NULL,
+        total_ha                       INT           NULL,
+        terrestre_ha                   INT           NULL,
+        marino_ha                      INT           NULL,
+        porcentaje_terrestre_protegido DECIMAL(6,2)  NULL,
+        fecha_carga                    DATETIME2     NOT NULL CONSTRAINT DF_AreasProtegidas_FechaCarga DEFAULT (SYSDATETIME()),
+        fecha_actualizacion            DATETIME2     NULL,
+        CONSTRAINT UQ_AreasProtegidas_Jurisdiccion UNIQUE (jurisdiccion)
+    );
+END
+ELSE
+    PRINT 'OK - Tabla estadisticas.AreasProtegidasJurisdiccion ya existe, se omite creación.';

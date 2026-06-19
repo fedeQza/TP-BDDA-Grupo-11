@@ -1920,3 +1920,114 @@ BEGIN
     DELETE FROM estadisticas.OrganizacionesDistinguidas WHERE id_organizacion = @p_id_organizacion;
 END
 GO
+
+-- ==============================================================
+-- SCHEMA: estadisticas  |  TABLA: AreasProtegidasJurisdiccion
+-- ==============================================================
+
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('estadisticas.AreasProtegidasInsertar') AND type = 'P')
+    PRINT 'Creando Procedure estadisticas.AreasProtegidasInsertar...';
+ELSE
+    PRINT 'OK - Procedure estadisticas.AreasProtegidasInsertar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE estadisticas.AreasProtegidasInsertar
+    @p_jurisdiccion                   NVARCHAR(100),
+    @p_total_cantidad                 INT          = NULL,
+    @p_ap_nac                         INT          = NULL,
+    @p_ap_prov                        INT          = NULL,
+    @p_ap_desig_inter                 INT          = NULL,
+    @p_total_ha                       INT          = NULL,
+    @p_terrestre_ha                   INT          = NULL,
+    @p_marino_ha                      INT          = NULL,
+    @p_porcentaje_terrestre_protegido DECIMAL(6,2) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @errores NVARCHAR(MAX) = N'';
+
+    IF LTRIM(RTRIM(ISNULL(@p_jurisdiccion, ''))) = ''
+        SET @errores += N'- La jurisdicción es obligatoria.' + CHAR(13);
+    IF EXISTS (SELECT 1 FROM estadisticas.AreasProtegidasJurisdiccion WHERE jurisdiccion = @p_jurisdiccion)
+        SET @errores += N'- Ya existe un registro para esa jurisdicción.' + CHAR(13);
+    IF @p_total_cantidad IS NOT NULL AND @p_total_cantidad < 0
+        SET @errores += N'- El total de áreas protegidas no puede ser negativo.' + CHAR(13);
+    IF @p_total_ha IS NOT NULL AND @p_total_ha < 0
+        SET @errores += N'- El total de hectáreas no puede ser negativo.' + CHAR(13);
+
+    IF @errores != N'' THROW 50000, @errores, 1;
+
+    INSERT INTO estadisticas.AreasProtegidasJurisdiccion
+        (jurisdiccion, total_cantidad, ap_nac, ap_prov, ap_desig_inter,
+         total_ha, terrestre_ha, marino_ha, porcentaje_terrestre_protegido)
+    VALUES
+        (@p_jurisdiccion, @p_total_cantidad, @p_ap_nac, @p_ap_prov, @p_ap_desig_inter,
+         @p_total_ha, @p_terrestre_ha, @p_marino_ha, @p_porcentaje_terrestre_protegido);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('estadisticas.AreasProtegidasModificar') AND type = 'P')
+    PRINT 'Creando Procedure estadisticas.AreasProtegidasModificar...';
+ELSE
+    PRINT 'OK - Procedure estadisticas.AreasProtegidasModificar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE estadisticas.AreasProtegidasModificar
+    @p_id_area                        INT,
+    @p_total_cantidad                 INT          = NULL,
+    @p_ap_nac                         INT          = NULL,
+    @p_ap_prov                        INT          = NULL,
+    @p_ap_desig_inter                 INT          = NULL,
+    @p_total_ha                       INT          = NULL,
+    @p_terrestre_ha                   INT          = NULL,
+    @p_marino_ha                      INT          = NULL,
+    @p_porcentaje_terrestre_protegido DECIMAL(6,2) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @errores NVARCHAR(MAX) = N'';
+
+    IF NOT EXISTS (SELECT 1 FROM estadisticas.AreasProtegidasJurisdiccion WHERE id_area = @p_id_area)
+        SET @errores += N'- No existe un área protegida con el ID indicado.' + CHAR(13);
+    IF @p_total_cantidad IS NOT NULL AND @p_total_cantidad < 0
+        SET @errores += N'- El total de áreas protegidas no puede ser negativo.' + CHAR(13);
+    IF @p_total_ha IS NOT NULL AND @p_total_ha < 0
+        SET @errores += N'- El total de hectáreas no puede ser negativo.' + CHAR(13);
+
+    IF @errores != N'' THROW 50000, @errores, 1;
+
+    UPDATE estadisticas.AreasProtegidasJurisdiccion
+    SET total_cantidad                 = @p_total_cantidad,
+        ap_nac                         = @p_ap_nac,
+        ap_prov                        = @p_ap_prov,
+        ap_desig_inter                 = @p_ap_desig_inter,
+        total_ha                       = @p_total_ha,
+        terrestre_ha                   = @p_terrestre_ha,
+        marino_ha                      = @p_marino_ha,
+        porcentaje_terrestre_protegido = @p_porcentaje_terrestre_protegido,
+        fecha_actualizacion            = SYSDATETIME()
+    WHERE id_area = @p_id_area;
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('estadisticas.AreasProtegidasEliminar') AND type = 'P')
+    PRINT 'Creando Procedure estadisticas.AreasProtegidasEliminar...';
+ELSE
+    PRINT 'OK - Procedure estadisticas.AreasProtegidasEliminar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE estadisticas.AreasProtegidasEliminar
+    @p_id_area INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @errores NVARCHAR(MAX) = N'';
+
+    IF NOT EXISTS (SELECT 1 FROM estadisticas.AreasProtegidasJurisdiccion WHERE id_area = @p_id_area)
+        SET @errores += N'- No existe un área protegida con el ID indicado.' + CHAR(13);
+
+    IF @errores != N'' THROW 50000, @errores, 1;
+
+    DELETE FROM estadisticas.AreasProtegidasJurisdiccion WHERE id_area = @p_id_area;
+END
+GO
