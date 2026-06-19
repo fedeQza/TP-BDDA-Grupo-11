@@ -1664,3 +1664,139 @@ BEGIN
     DELETE FROM ventas.TicketDetalle WHERE id_detalle = @p_id_detalle;
 END
 GO
+
+-- ==============================================================
+-- SCHEMA: estadisticas  |  TABLA: ErroresImportacion
+-- Solo Insertar: es un log de auditoría (no se modifica ni elimina)
+-- ==============================================================
+
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('estadisticas.ErroresImportacionInsertar') AND type = 'P')
+    PRINT 'Creando Procedure estadisticas.ErroresImportacionInsertar...';
+ELSE
+    PRINT 'OK - Procedure estadisticas.ErroresImportacionInsertar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE estadisticas.ErroresImportacionInsertar
+    @p_archivo_origen          VARCHAR(500) = NULL,
+    @p_motivo_error            VARCHAR(500),
+    @p_indice_tiempo_valor     VARCHAR(500) = NULL,
+    @p_region_destino_valor    VARCHAR(500) = NULL,
+    @p_origen_visitantes_valor VARCHAR(500) = NULL,
+    @p_visitas_valor           VARCHAR(500) = NULL,
+    @p_observaciones_valor     VARCHAR(500) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @errores NVARCHAR(MAX) = N'';
+
+    IF LTRIM(RTRIM(ISNULL(@p_motivo_error, ''))) = ''
+        SET @errores += N'- El motivo de error es obligatorio.' + CHAR(13);
+
+    IF @errores != N'' THROW 50000, @errores, 1;
+
+    INSERT INTO estadisticas.ErroresImportacion
+        (archivo_origen, motivo_error, indice_tiempo_valor, region_destino_valor,
+         origen_visitantes_valor, visitas_valor, observaciones_valor)
+    VALUES
+        (@p_archivo_origen, @p_motivo_error, @p_indice_tiempo_valor, @p_region_destino_valor,
+         @p_origen_visitantes_valor, @p_visitas_valor, @p_observaciones_valor);
+END
+GO
+
+-- ==============================================================
+-- SCHEMA: estadisticas  |  TABLA: VisitantesParques
+-- ==============================================================
+
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('estadisticas.VisitantesParquesInsertar') AND type = 'P')
+    PRINT 'Creando Procedure estadisticas.VisitantesParquesInsertar...';
+ELSE
+    PRINT 'OK - Procedure estadisticas.VisitantesParquesInsertar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE estadisticas.VisitantesParquesInsertar
+    @p_indice_tiempo     DATE,
+    @p_region_destino    VARCHAR(100),
+    @p_origen_visitantes VARCHAR(50),
+    @p_visitas           INT,
+    @p_observaciones     VARCHAR(500) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @errores NVARCHAR(MAX) = N'';
+
+    IF @p_indice_tiempo IS NULL
+        SET @errores += N'- La fecha (indice_tiempo) es obligatoria.' + CHAR(13);
+    IF LTRIM(RTRIM(ISNULL(@p_region_destino, ''))) = ''
+        SET @errores += N'- La región de destino es obligatoria.' + CHAR(13);
+    IF LTRIM(RTRIM(ISNULL(@p_origen_visitantes, ''))) = ''
+        SET @errores += N'- El origen de visitantes es obligatorio.' + CHAR(13);
+    IF ISNULL(@p_visitas, -1) < 0
+        SET @errores += N'- La cantidad de visitas no puede ser negativa.' + CHAR(13);
+    IF EXISTS (
+        SELECT 1 FROM estadisticas.VisitantesParques
+        WHERE indice_tiempo = @p_indice_tiempo
+          AND region_destino = @p_region_destino
+          AND origen_visitantes = @p_origen_visitantes
+    )
+        SET @errores += N'- Ya existe un registro con esa combinación de fecha, región y origen.' + CHAR(13);
+
+    IF @errores != N'' THROW 50000, @errores, 1;
+
+    INSERT INTO estadisticas.VisitantesParques
+        (indice_tiempo, region_destino, origen_visitantes, visitas, observaciones)
+    VALUES
+        (@p_indice_tiempo, @p_region_destino, @p_origen_visitantes, @p_visitas, @p_observaciones);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('estadisticas.VisitantesParquesModificar') AND type = 'P')
+    PRINT 'Creando Procedure estadisticas.VisitantesParquesModificar...';
+ELSE
+    PRINT 'OK - Procedure estadisticas.VisitantesParquesModificar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE estadisticas.VisitantesParquesModificar
+    @p_id_visitantes_parque INT,
+    @p_visitas              INT,
+    @p_observaciones        VARCHAR(500) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @errores NVARCHAR(MAX) = N'';
+
+    IF NOT EXISTS (SELECT 1 FROM estadisticas.VisitantesParques WHERE id_visitantes_parque = @p_id_visitantes_parque)
+        SET @errores += N'- No existe un registro con el ID indicado.' + CHAR(13);
+    IF ISNULL(@p_visitas, -1) < 0
+        SET @errores += N'- La cantidad de visitas no puede ser negativa.' + CHAR(13);
+
+    IF @errores != N'' THROW 50000, @errores, 1;
+
+    UPDATE estadisticas.VisitantesParques
+    SET visitas             = @p_visitas,
+        observaciones       = @p_observaciones,
+        fecha_actualizacion = SYSDATETIME()
+    WHERE id_visitantes_parque = @p_id_visitantes_parque;
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('estadisticas.VisitantesParquesEliminar') AND type = 'P')
+    PRINT 'Creando Procedure estadisticas.VisitantesParquesEliminar...';
+ELSE
+    PRINT 'OK - Procedure estadisticas.VisitantesParquesEliminar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE estadisticas.VisitantesParquesEliminar
+    @p_id_visitantes_parque INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @errores NVARCHAR(MAX) = N'';
+
+    IF NOT EXISTS (SELECT 1 FROM estadisticas.VisitantesParques WHERE id_visitantes_parque = @p_id_visitantes_parque)
+        SET @errores += N'- No existe un registro con el ID indicado.' + CHAR(13);
+
+    IF @errores != N'' THROW 50000, @errores, 1;
+
+    DELETE FROM estadisticas.VisitantesParques WHERE id_visitantes_parque = @p_id_visitantes_parque;
+END
+GO

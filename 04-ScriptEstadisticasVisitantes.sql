@@ -11,20 +11,14 @@ Descripción: Entrega 6 - Carga histórica de estadísticas de
              origen_visitantes, visitas, observaciones).
 
              Contenido:
-             - Schemas 'estadisticas' e 'importaciones'.
-             - estadisticas.VisitantesParques
-                 Tabla destino con el historial. No se borran
-                 registros: las cargas sucesivas insertan los
-                 períodos nuevos y actualizan observaciones/
-                 visitas si cambiaron para una clave existente.
-             - #StagingVisitantes (tabla temporal)
-                 Staging creado dentro del SP por BULK INSERT.
-                 Se valida en el mismo staging (una sola tabla).
-             - estadisticas.ErroresImportacion
-                 Registro de filas rechazadas por archivo.
              - importaciones.ImportarEstadisticasVisitantes
                  Procedimiento que realiza toda la carga,
                  validación y upsert (sin MERGE).
+
+             Nota: Los schemas 'estadisticas' e 'importaciones',
+             las tablas estadisticas.VisitantesParques y
+             estadisticas.ErroresImportacion se crean en
+             01-ScriptCreacionTablasYSchemas.sql.
 
              Clave de unicidad / upsert:
                  indice_tiempo + region_destino + origen_visitantes
@@ -32,71 +26,6 @@ Descripción: Entrega 6 - Carga histórica de estadísticas de
 */
 
 USE ParquesNacionalesDB;
-GO
-
--- ==============================================================
--- SCHEMAS
--- ==============================================================
-
-IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'estadisticas')
-    EXEC('CREATE SCHEMA estadisticas;');
-GO
-
-IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'importaciones')
-    EXEC('CREATE SCHEMA importaciones;');
-GO
-
--- ==============================================================
--- TABLA DESTINO: estadisticas.VisitantesParques
--- Histórico de visitantes. No se eliminan filas: el SP de
--- importación solo inserta claves nuevas o actualiza
--- visitas/observaciones de claves existentes.
--- ==============================================================
-
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'VisitantesParques' AND schema_id = SCHEMA_ID('estadisticas'))
-BEGIN
-    PRINT 'Creando tabla estadisticas.VisitantesParques...';
-    CREATE TABLE estadisticas.VisitantesParques (
-        id_visitantes_parque INT IDENTITY(1,1) PRIMARY KEY,
-        indice_tiempo        DATE          NOT NULL,
-        region_destino       VARCHAR(100)  NOT NULL,
-        origen_visitantes    VARCHAR(50)   NOT NULL,
-        visitas              INT           NOT NULL,
-        observaciones        VARCHAR(500)  NULL,
-        fecha_carga          DATETIME2     NOT NULL CONSTRAINT DF_VisitantesParques_FechaCarga DEFAULT (SYSDATETIME()),
-        fecha_actualizacion  DATETIME2     NULL,
-        CONSTRAINT CK_VisitantesParques_Visitas CHECK (visitas >= 0),
-        CONSTRAINT UQ_VisitantesParques_Clave UNIQUE (indice_tiempo, region_destino, origen_visitantes)
-    );
-END
-ELSE
-    PRINT 'OK - Tabla estadisticas.VisitantesParques ya existe, se omite creación.';
-GO
-
--- ==============================================================
--- TABLA DE ERRORES: estadisticas.ErroresImportacion
--- Guarda, por archivo importado, cada fila rechazada junto con
--- el motivo y los valores originales (sin convertir) leídos
--- del CSV.
--- ==============================================================
-
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ErroresImportacion' AND schema_id = SCHEMA_ID('estadisticas'))
-BEGIN
-    PRINT 'Creando tabla estadisticas.ErroresImportacion...';
-    CREATE TABLE estadisticas.ErroresImportacion (
-        id_error                INT IDENTITY(1,1) PRIMARY KEY,
-        fecha_error             DATETIME2     NOT NULL CONSTRAINT DF_ErroresImportacion_Fecha DEFAULT (SYSDATETIME()),
-        archivo_origen          VARCHAR(500)  NULL,
-        motivo_error            VARCHAR(500)  NOT NULL,
-        indice_tiempo_valor     VARCHAR(30)   NULL,
-        region_destino_valor    VARCHAR(200)  NULL,
-        origen_visitantes_valor VARCHAR(100)  NULL,
-        visitas_valor           VARCHAR(50)   NULL,
-        observaciones_valor     VARCHAR(500)  NULL
-    );
-END
-ELSE
-    PRINT 'OK - Tabla estadisticas.ErroresImportacion ya existe, se omite creación.';
 GO
 
 -- ==============================================================

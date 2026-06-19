@@ -367,3 +367,69 @@ BEGIN
 END
 ELSE
     PRINT 'OK - Tabla ventas.TicketDetalle ya existe, se omite creación.';
+
+GO
+
+-- ==============================================================
+-- SCHEMAS: estadisticas e importaciones
+-- (usados por los scripts de importación de Entrega 6)
+-- ==============================================================
+
+IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'estadisticas')
+    EXEC('CREATE SCHEMA estadisticas;');
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'importaciones')
+    EXEC('CREATE SCHEMA importaciones;');
+GO
+
+-- ==============================================================
+-- SCHEMA: estadisticas  |  TABLA: VisitantesParques
+-- Histórico de visitantes por período, región y origen.
+-- El SP de importación inserta claves nuevas y actualiza
+-- visitas/observaciones de claves existentes; nunca elimina.
+-- ==============================================================
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'VisitantesParques' AND schema_id = SCHEMA_ID('estadisticas'))
+BEGIN
+    PRINT 'Creando tabla estadisticas.VisitantesParques...';
+    CREATE TABLE estadisticas.VisitantesParques (
+        id_visitantes_parque INT IDENTITY(1,1) PRIMARY KEY,
+        indice_tiempo        DATE          NOT NULL,
+        region_destino       VARCHAR(100)  NOT NULL,
+        origen_visitantes    VARCHAR(50)   NOT NULL,
+        visitas              INT           NOT NULL,
+        observaciones        VARCHAR(500)  NULL,
+        fecha_carga          DATETIME2     NOT NULL CONSTRAINT DF_VisitantesParques_FechaCarga DEFAULT (SYSDATETIME()),
+        fecha_actualizacion  DATETIME2     NULL,
+        CONSTRAINT CK_VisitantesParques_Visitas CHECK (visitas >= 0),
+        CONSTRAINT UQ_VisitantesParques_Clave UNIQUE (indice_tiempo, region_destino, origen_visitantes)
+    );
+END
+ELSE
+    PRINT 'OK - Tabla estadisticas.VisitantesParques ya existe, se omite creación.';
+GO
+
+-- ==============================================================
+-- SCHEMA: estadisticas  |  TABLA: ErroresImportacion
+-- Registro de filas rechazadas por los SPs de importación.
+-- Tabla de auditoría: no se modifica ni elimina.
+-- ==============================================================
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ErroresImportacion' AND schema_id = SCHEMA_ID('estadisticas'))
+BEGIN
+    PRINT 'Creando tabla estadisticas.ErroresImportacion...';
+    CREATE TABLE estadisticas.ErroresImportacion (
+        id_error                INT IDENTITY(1,1) PRIMARY KEY,
+        fecha_error             DATETIME2     NOT NULL CONSTRAINT DF_ErroresImportacion_Fecha DEFAULT (SYSDATETIME()),
+        archivo_origen          VARCHAR(500)  NULL,
+        motivo_error            VARCHAR(500)  NOT NULL,
+        indice_tiempo_valor     VARCHAR(500)  NULL,
+        region_destino_valor    VARCHAR(500)  NULL,
+        origen_visitantes_valor VARCHAR(500)  NULL,
+        visitas_valor           VARCHAR(500)  NULL,
+        observaciones_valor     VARCHAR(500)  NULL
+    );
+END
+ELSE
+    PRINT 'OK - Tabla estadisticas.ErroresImportacion ya existe, se omite creación.';
