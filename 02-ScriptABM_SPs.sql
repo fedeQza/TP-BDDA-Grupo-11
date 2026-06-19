@@ -1800,3 +1800,123 @@ BEGIN
     DELETE FROM estadisticas.VisitantesParques WHERE id_visitantes_parque = @p_id_visitantes_parque;
 END
 GO
+
+-- ==============================================================
+-- SCHEMA: estadisticas  |  TABLA: OrganizacionesDistinguidas
+-- ==============================================================
+
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('estadisticas.OrganizacionesDistinguidasInsertar') AND type = 'P')
+    PRINT 'Creando Procedure estadisticas.OrganizacionesDistinguidasInsertar...';
+ELSE
+    PRINT 'OK - Procedure estadisticas.OrganizacionesDistinguidasInsertar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE estadisticas.OrganizacionesDistinguidasInsertar
+    @p_organizacion      VARCHAR(200),
+    @p_rubro             VARCHAR(100) = NULL,
+    @p_subrubro          VARCHAR(100) = NULL,
+    @p_calle             VARCHAR(200) = NULL,
+    @p_numero            VARCHAR(50)  = NULL,
+    @p_pais              VARCHAR(100) = NULL,
+    @p_provincia         VARCHAR(100) = NULL,
+    @p_ciudad            VARCHAR(100) = NULL,
+    @p_telefono          VARCHAR(100) = NULL,
+    @p_facebook          VARCHAR(200) = NULL,
+    @p_web               VARCHAR(200) = NULL,
+    @p_programa          VARCHAR(200) = NULL,
+    @p_fecha_distincion  DATE         = NULL,
+    @p_fecha_revalidacion DATE        = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @errores NVARCHAR(MAX) = N'';
+
+    IF LTRIM(RTRIM(ISNULL(@p_organizacion, ''))) = ''
+        SET @errores += N'- El nombre de la organización es obligatorio.' + CHAR(13);
+    IF EXISTS (
+        SELECT 1 FROM estadisticas.OrganizacionesDistinguidas
+        WHERE organizacion      = @p_organizacion
+          AND ISNULL(calle, '')  = ISNULL(@p_calle, '')
+          AND ISNULL(numero, '') = ISNULL(@p_numero, '')
+    )
+        SET @errores += N'- Ya existe una organización con esa combinación de nombre, calle y número.' + CHAR(13);
+
+    IF @errores != N'' THROW 50000, @errores, 1;
+
+    INSERT INTO estadisticas.OrganizacionesDistinguidas
+        (organizacion, rubro, subrubro, calle, numero, pais, provincia, ciudad,
+         telefono, facebook, web, programa, fecha_distincion, fecha_revalidacion)
+    VALUES
+        (@p_organizacion, @p_rubro, @p_subrubro, @p_calle, @p_numero, @p_pais,
+         @p_provincia, @p_ciudad, @p_telefono, @p_facebook, @p_web, @p_programa,
+         @p_fecha_distincion, @p_fecha_revalidacion);
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('estadisticas.OrganizacionesDistinguidasModificar') AND type = 'P')
+    PRINT 'Creando Procedure estadisticas.OrganizacionesDistinguidasModificar...';
+ELSE
+    PRINT 'OK - Procedure estadisticas.OrganizacionesDistinguidasModificar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE estadisticas.OrganizacionesDistinguidasModificar
+    @p_id_organizacion   INT,
+    @p_rubro             VARCHAR(100) = NULL,
+    @p_subrubro          VARCHAR(100) = NULL,
+    @p_pais              VARCHAR(100) = NULL,
+    @p_provincia         VARCHAR(100) = NULL,
+    @p_ciudad            VARCHAR(100) = NULL,
+    @p_telefono          VARCHAR(100) = NULL,
+    @p_facebook          VARCHAR(200) = NULL,
+    @p_web               VARCHAR(200) = NULL,
+    @p_programa          VARCHAR(200) = NULL,
+    @p_fecha_distincion  DATE         = NULL,
+    @p_fecha_revalidacion DATE        = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @errores NVARCHAR(MAX) = N'';
+
+    IF NOT EXISTS (SELECT 1 FROM estadisticas.OrganizacionesDistinguidas WHERE id_organizacion = @p_id_organizacion)
+        SET @errores += N'- No existe una organización con el ID indicado.' + CHAR(13);
+
+    IF @errores != N'' THROW 50000, @errores, 1;
+
+    UPDATE estadisticas.OrganizacionesDistinguidas
+    SET rubro               = @p_rubro,
+        subrubro            = @p_subrubro,
+        pais                = @p_pais,
+        provincia           = @p_provincia,
+        ciudad              = @p_ciudad,
+        telefono            = @p_telefono,
+        facebook            = @p_facebook,
+        web                 = @p_web,
+        programa            = @p_programa,
+        fecha_distincion    = @p_fecha_distincion,
+        fecha_revalidacion  = @p_fecha_revalidacion,
+        fecha_actualizacion = SYSDATETIME()
+    WHERE id_organizacion = @p_id_organizacion;
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID('estadisticas.OrganizacionesDistinguidasEliminar') AND type = 'P')
+    PRINT 'Creando Procedure estadisticas.OrganizacionesDistinguidasEliminar...';
+ELSE
+    PRINT 'OK - Procedure estadisticas.OrganizacionesDistinguidasEliminar ya existe, se omite creación.';
+GO
+
+CREATE OR ALTER PROCEDURE estadisticas.OrganizacionesDistinguidasEliminar
+    @p_id_organizacion INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @errores NVARCHAR(MAX) = N'';
+
+    IF NOT EXISTS (SELECT 1 FROM estadisticas.OrganizacionesDistinguidas WHERE id_organizacion = @p_id_organizacion)
+        SET @errores += N'- No existe una organización con el ID indicado.' + CHAR(13);
+
+    IF @errores != N'' THROW 50000, @errores, 1;
+
+    DELETE FROM estadisticas.OrganizacionesDistinguidas WHERE id_organizacion = @p_id_organizacion;
+END
+GO

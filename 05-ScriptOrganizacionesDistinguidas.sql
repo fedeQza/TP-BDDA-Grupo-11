@@ -10,21 +10,13 @@ Descripción: Entrega 6 - Carga de organizaciones distinguidas
              (registro-organizaciones-distinguidas.csv).
 
              Contenido:
-             - estadisticas.OrganizacionesDistinguidas
-                 Tabla destino. No se eliminan registros: las
-                 cargas sucesivas insertan organizaciones nuevas
-                 y actualizan los datos de contacto/programa
-                 si cambiaron para una clave existente.
-             - #StagingOrganizaciones (tabla temporal)
-                 Staging creado dentro del SP. Solo columnas raw
-                 (mapeo 1-a-1 con el CSV); las columnas tipadas y
-                 motivo_error se agregan con ALTER TABLE, evitando
-                 una segunda tabla temporal.
-             - Reutiliza estadisticas.ErroresImportacion
-                 (creada en 01-ScriptCreacionTablasYSchemas.sql).
              - importaciones.ImportarOrganizacionesDistinguidas
                  Procedimiento que realiza toda la carga,
                  validación y upsert (sin MERGE).
+
+             Nota: La tabla estadisticas.OrganizacionesDistinguidas,
+             sus índices y estadisticas.ErroresImportacion se crean
+             en 01-ScriptCreacionTablasYSchemas.sql.
 
              Clave de unicidad / upsert:
                  organizacion + calle + numero
@@ -32,46 +24,6 @@ Descripción: Entrega 6 - Carga de organizaciones distinguidas
 */
 
 USE ParquesNacionalesDB;
-GO
-
--- ==============================================================
--- TABLA DESTINO: estadisticas.OrganizacionesDistinguidas
--- ==============================================================
-
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'OrganizacionesDistinguidas' AND schema_id = SCHEMA_ID('estadisticas'))
-BEGIN
-    PRINT 'Creando tabla estadisticas.OrganizacionesDistinguidas...';
-    CREATE TABLE estadisticas.OrganizacionesDistinguidas (
-        id_organizacion     INT IDENTITY(1,1) PRIMARY KEY,
-        organizacion        VARCHAR(200)  NOT NULL,
-        rubro               VARCHAR(100)  NULL,
-        subrubro            VARCHAR(100)  NULL,
-        calle               VARCHAR(200)  NULL,
-        numero              VARCHAR(50)   NULL,
-        pais                VARCHAR(100)  NULL,
-        provincia           VARCHAR(100)  NULL,
-        ciudad              VARCHAR(100)  NULL,
-        telefono            VARCHAR(100)  NULL,
-        facebook            VARCHAR(200)  NULL,
-        web                 VARCHAR(200)  NULL,
-        programa            VARCHAR(200)  NULL,
-        fecha_distincion    DATE          NULL,
-        fecha_revalidacion  DATE          NULL,
-        fecha_carga         DATETIME2     NOT NULL CONSTRAINT DF_OrganizacionesDistinguidas_FechaCarga DEFAULT (SYSDATETIME()),
-        fecha_actualizacion DATETIME2     NULL,
-        CONSTRAINT UQ_OrganizacionesDistinguidas_Clave UNIQUE (organizacion, calle, numero)
-    );
-END
-ELSE
-    PRINT 'OK - Tabla estadisticas.OrganizacionesDistinguidas ya existe, se omite creación.';
-GO
-
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_OrganizacionesDistinguidas_Provincia')
-    CREATE INDEX IX_OrganizacionesDistinguidas_Provincia ON estadisticas.OrganizacionesDistinguidas (provincia);
-GO
-
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_OrganizacionesDistinguidas_Rubro')
-    CREATE INDEX IX_OrganizacionesDistinguidas_Rubro ON estadisticas.OrganizacionesDistinguidas (rubro);
 GO
 
 -- ==============================================================
